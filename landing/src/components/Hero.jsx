@@ -54,7 +54,7 @@ export default function Hero() {
           </p>
 
           <div className="flex flex-wrap gap-6 mt-4">
-            <a href="http://localhost:4200/login">
+            <a href="https://queueswap-app.onrender.com/login">
               <button className="glow-btn text-base" onClick={handleRipple}>
                 Get Started
               </button>

@@ -56,10 +56,10 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-6">
-          <a href="http://localhost:4200/login" className="text-text-primary hover:text-neon-cyan transition-colors text-sm font-semibold">
+          <a href="https://queueswap-app.onrender.com/login" className="text-text-primary hover:text-neon-cyan transition-colors text-sm font-semibold">
             Sign In
           </a>
-          <a href="http://localhost:4200/register">
+          <a href="https://queueswap-app.onrender.com/register">
             <button className="glow-btn text-sm !py-2.5 !px-6">Sign Up</button>
           </a>
         </div>
@@ -98,10 +98,10 @@ export default function Navbar() {
                 </a>
               ))}
               <div className="flex flex-col gap-3 mt-4">
-                <a href="http://localhost:4200/login" className="text-center text-text-primary hover:text-neon-cyan transition-colors text-base font-semibold py-2">
+                <a href="https://queueswap-app.onrender.com/login" className="text-center text-text-primary hover:text-neon-cyan transition-colors text-base font-semibold py-2">
                   Sign In
                 </a>
-                <a href="http://localhost:4200/register" className="w-full">
+                <a href="https://queueswap-app.onrender.com/register" className="w-full">
                   <button className="w-full glow-btn text-sm py-3">Sign Up</button>
                 </a>
               </div>

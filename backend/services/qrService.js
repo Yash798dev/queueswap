@@ -34,9 +34,8 @@ function getLocalIpAddress() {
 exports.generateBusinessQRCode = async (business) => {
     try {
         const ip = getLocalIpAddress();
-        // Point to Angular Frontend via ngrok URL
-        const ngrokUrl = 'https://electromechanical-weakhanded-elizabet.ngrok-free.dev';
-        const qrData = `${ngrokUrl}/queue-join/${business._id}`;
+        // Point to Angular Frontend on Render
+        const qrData = `https://queueswap-app.onrender.com/queue-join/${business._id}`;
 
         // Generate QR Code as Data URL
         const qrCodeDataURL = await QRCode.toDataURL(qrData);
