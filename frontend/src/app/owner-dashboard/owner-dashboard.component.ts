@@ -32,8 +32,7 @@ export class OwnerDashboardComponent implements OnInit {
     }
 
     loadBusinessInfo() {
-        const hostname = window.location.hostname;
-        const apiUrl = `http://${hostname}:5000/api/business/pending`;
+        const apiUrl = `https://queueswap-backend.onrender.com/api/business/pending`;
 
         this.http.get<any[]>(apiUrl).subscribe({
             next: (businesses) => {

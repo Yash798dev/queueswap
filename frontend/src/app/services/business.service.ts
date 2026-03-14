@@ -7,7 +7,7 @@ import { timeout, catchError, tap } from 'rxjs/operators';
     providedIn: 'root'
 })
 export class BusinessService {
-    private apiUrl = 'http://localhost:5000/api/business';
+    private apiUrl = 'https://queueswap-backend.onrender.com/api/business';
 
     constructor(private http: HttpClient) { }
 

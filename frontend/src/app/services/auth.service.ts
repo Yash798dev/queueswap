@@ -7,7 +7,7 @@ import { tap, timeout, catchError } from 'rxjs/operators';
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = 'http://localhost:5000/api/auth';
+    private apiUrl = 'https://queueswap-backend.onrender.com/api/auth';
     private tokenKey = 'queue_swap_token';
 
     constructor(private http: HttpClient) { }

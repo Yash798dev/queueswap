@@ -36,8 +36,7 @@ export class BusinessQueueComponent implements OnInit {
         this.message = null;
         this.servedCustomer = null;
 
-        const hostname = window.location.hostname;
-        const apiUrl = `http://${hostname}:5000/api/business/queue/update`;
+        const apiUrl = `https://queueswap-backend.onrender.com/api/business/queue/update`;
 
         console.log('[BusinessQueueComponent] Marking as served:', this.uniqueId);
 
