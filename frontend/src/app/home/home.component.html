@@ -1,0 +1,111 @@
+<div class="home-container">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🚀</span>
+                <span class="logo-text text-gradient">Queue Swap</span>
+            </div>
+            <div class="header-actions">
+                <button *ngIf="isOwner()" (click)="goToQueueManagement()" class="btn-queue">
+                    <span class="btn-icon">🎫</span>
+                    Manage Queue
+                </button>
+                <button (click)="logout()" class="btn-logout">
+                    <span class="btn-icon">🚪</span>
+                    Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Welcome Section -->
+    <section class="welcome-section">
+        <div class="welcome-card">
+            <div class="avatar">
+                <span>{{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
+            </div>
+            <h1>Welcome back, <span class="text-gradient">{{ user?.name || 'User' }}</span>!</h1>
+            <p class="text-secondary">Manage your business details and queue swap settings</p>
+        </div>
+    </section>
+
+    <!-- Business Form Section -->
+    <section class="form-section">
+        <div class="card">
+            <div class="card-header">
+                <h2>
+                    <span class="header-icon">🏢</span>
+                    Submit Business Details
+                </h2>
+                <p class="text-secondary">Register your business for queue management</p>
+            </div>
+
+            <div *ngIf="submissionStatus === 'success'" class="alert alert-success">
+                <span class="alert-icon">✅</span>
+                Business details submitted successfully! Pending Admin Approval.
+            </div>
+
+            <div *ngIf="submissionStatus === 'error'" class="alert alert-error">
+                <span class="alert-icon">❌</span>
+                Failed to submit details. Please try again.
+            </div>
+
+            <form (ngSubmit)="onSubmit()" #businessForm="ngForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name">
+                            <span class="label-icon">📝</span>
+                            Business Name
+                        </label>
+                        <input type="text" id="name" name="name" [(ngModel)]="business.name" required
+                            placeholder="Enter business name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">
+                            <span class="label-icon">📂</span>
+                            Category
+                        </label>
+                        <select id="category" name="category" [(ngModel)]="business.category" required>
+                            <option value="Restaurant">🍽️ Restaurant</option>
+                            <option value="Hospital">🏥 Hospital</option>
+                            <option value="Salon">💇 Salon</option>
+                            <option value="Bank">🏦 Bank</option>
+                            <option value="Other">📦 Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">
+                            <span class="label-icon">📍</span>
+                            Location
+                        </label>
+                        <input type="text" id="location" name="location" [(ngModel)]="business.location" required
+                            placeholder="Enter business location">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mobile">
+                            <span class="label-icon">📱</span>
+                            Mobile Number
+                        </label>
+                        <input type="tel" id="mobile" name="mobile" [(ngModel)]="business.mobile" required
+                            placeholder="Enter mobile number">
+                    </div>
+                </div>
+
+                <button type="submit" [disabled]="!businessForm.form.valid || loading" class="submit-btn">
+                    <span *ngIf="!loading">
+                        <span class="btn-icon">📤</span>
+                        Submit for Approval
+                    </span>
+                    <span *ngIf="loading" class="btn-loading">
+                        <span class="loading-spinner"></span>
+                        Submitting...
+                    </span>
+                </button>
+            </form>
+        </div>
+    </section>
+</div>

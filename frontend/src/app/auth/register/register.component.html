@@ -1,0 +1,80 @@
+<div class="container">
+  <div class="card">
+    <!-- Logo/Brand Area -->
+    <div class="text-center mb-4">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <line x1="19" y1="8" x2="19" y2="14"></line>
+          <line x1="22" y1="11" x2="16" y2="11"></line>
+        </svg>
+      </div>
+      <h1 class="text-gradient">Create Account</h1>
+      <p class="text-secondary">Join Queue Swap today</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm" *ngIf="!success">
+      <div class="form-group">
+        <label for="name">
+          <span class="label-icon">👤</span>
+          Full Name
+        </label>
+        <input type="text" id="name" name="name" [(ngModel)]="user.name" required placeholder="e.g. John Doe">
+      </div>
+
+      <div class="form-group">
+        <label for="email">
+          <span class="label-icon">✉️</span>
+          Email Address
+        </label>
+        <input type="email" id="email" name="email" [(ngModel)]="user.email" required email
+          placeholder="name@example.com">
+      </div>
+
+      <div class="form-group">
+        <label for="password">
+          <span class="label-icon">🔒</span>
+          Password
+        </label>
+        <input type="password" id="password" name="password" [(ngModel)]="user.password" required minlength="6"
+          placeholder="Min 6 characters">
+      </div>
+
+      <div *ngIf="error" class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        {{ error }}
+      </div>
+
+      <button type="submit" [disabled]="!registerForm.form.valid || loading">
+        <span *ngIf="!loading">Create Account</span>
+        <span *ngIf="loading" class="btn-loading">
+          <span class="loading-spinner"></span>
+          Creating...
+        </span>
+      </button>
+    </form>
+
+    <!-- Success Message -->
+    <div *ngIf="success" class="success-container text-center">
+      <div class="success-icon">✅</div>
+      <h2>Registration Successful!</h2>
+      <p class="text-secondary mb-4">{{ success }}</p>
+      <a routerLink="/login" class="btn-link">
+        Proceed to Login →
+      </a>
+    </div>
+
+    <div class="divider" *ngIf="!success">
+      <span>or</span>
+    </div>
+
+    <div class="text-center" *ngIf="!success">
+      <p class="small-text">
+        Already have an account?
+        <a routerLink="/login" class="link-accent">Sign In</a>
+      </p>
+    </div>
+  </div>
+</div>

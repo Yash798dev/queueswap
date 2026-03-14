@@ -1,0 +1,9 @@
+.deps/
+artifacts/
+node_modules/
+backend/node_modules/
+backend/.env
+backend/test_auth_flow.js
+backend/test_ip.js
+frontend/node_modules/
+landing/node_modules/

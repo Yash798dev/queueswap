@@ -1,0 +1,91 @@
+<div class="admin-container">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text text-gradient">Admin Dashboard</span>
+            </div>
+            <button (click)="logout()" class="btn-logout">
+                <span class="btn-icon">🚪</span>
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="stat-card">
+            <div class="stat-icon pending">📋</div>
+            <div class="stat-info">
+                <h3>{{ pendingBusinesses.length }}</h3>
+                <p>Pending Requests</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="content-section">
+        <div class="section-header">
+            <h2>
+                <span class="header-icon">📝</span>
+                Pending Approvals
+            </h2>
+            <p class="text-secondary">Review and manage business registration requests</p>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="loading-container">
+            <div class="loading-spinner large"></div>
+            <p class="text-secondary mt-3">Loading pending requests...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && pendingBusinesses.length === 0" class="empty-state">
+            <div class="empty-icon">🎉</div>
+            <h3>All Caught Up!</h3>
+            <p class="text-secondary">No pending business requests at the moment.</p>
+        </div>
+
+        <!-- Business Cards -->
+        <div class="request-list">
+            <div *ngFor="let business of pendingBusinesses; let i = index" class="request-card" [style.--index]="i">
+                <div class="card-content">
+                    <div class="business-header">
+                        <div class="business-avatar">
+                            {{ business.name?.charAt(0)?.toUpperCase() || 'B' }}
+                        </div>
+                        <div class="business-title">
+                            <h3>{{ business.name }}</h3>
+                            <span class="badge">{{ business.category }}</span>
+                        </div>
+                    </div>
+
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-icon">📍</span>
+                            <span>{{ business.location }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">📱</span>
+                            <span>{{ business.mobile }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">👤</span>
+                            <span>{{ business.userId?.name }} ({{ business.userId?.email }})</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-approve" (click)="updateStatus(business._id, 'Approved')">
+                        <span>✅</span> Approve
+                    </button>
+                    <button class="btn-reject" (click)="updateStatus(business._id, 'Rejected')">
+                        <span>❌</span> Reject
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,201 @@
+<div class="token-container">
+  <div class="card">
+    <!-- MetaMask Gate for Mobile -->
+    <div *ngIf="requiresMetaMaskBrowser" class="form-container" style="text-align: center; padding: 2rem;">
+      <h2>📱 Open in MetaMask</h2>
+      <p class="subtitle" style="margin-bottom: 2rem; line-height: 1.5;">To join the queue and securely swap your position later, please open this link in the MetaMask browser app.</p>
+      <a [href]="metaMaskDeepLink" class="submit-btn" style="display: block; text-decoration: none; padding: 14px; border-radius: 8px; font-weight: bold;">🦊 Open in MetaMask</a>
+    </div>
+
+    <!-- Main Content (Only when in proper browser) -->
+    <ng-container *ngIf="!requiresMetaMaskBrowser">
+      <!-- User Details Form -->
+      <div *ngIf="showForm && !error" class="form-container">
+      <h2>Join Queue</h2>
+      <p class="subtitle">Please enter your details</p>
+
+      <form (ngSubmit)="onSubmit()" #queueForm="ngForm">
+        <div class="form-group">
+          <label for="userName">📝 Your Name</label>
+          <input type="text" id="userName" name="userName" [(ngModel)]="userName" required
+            placeholder="Enter your name" />
+        </div>
+
+        <div class="form-group">
+          <label for="userPhone">📱 Phone Number</label>
+          <input type="tel" id="userPhone" name="userPhone" [(ngModel)]="userPhone" required
+            placeholder="Enter your phone number" />
+        </div>
+
+        <button type="submit" [disabled]="!queueForm.form.valid || isLoading" class="submit-btn">
+          <span *ngIf="!isLoading">Join Queue</span>
+          <span *ngIf="isLoading" class="btn-loading">
+            <span class="loading-spinner"></span>
+            Joining...
+          </span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading && !showForm" class="loading">
+      <div class="spinner"></div>
+      <p>Joining queue...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error">
+      <div class="icon">❌</div>
+      <h3>Oops!</h3>
+      <p>{{ error }}</p>
+    </div>
+
+    <!-- Success State -->
+    <div *ngIf="!isLoading && !error && !showForm" class="success">
+      <p class="business-name">{{ businessName }}</p>
+      <h1>{{ token }}</h1>
+      <p class="label">Your Token Number</p>
+      <div class="unique-id-box">
+        <p class="unique-id-label">Unique ID</p>
+        <p class="unique-id">{{ uniqueId }}</p>
+      </div>
+      <div class="info">
+        <p>Please wait for your turn.</p>
+      </div>
+
+      <!-- Swap Message -->
+      <div *ngIf="swapMessage" class="swap-message" [ngClass]="{
+        'swap-success': swapMessageType === 'success',
+        'swap-error': swapMessageType === 'error',
+        'swap-info': swapMessageType === 'info'
+      }">
+        <span class="swap-message-icon" *ngIf="swapMessageType === 'success'">✅</span>
+        <span class="swap-message-icon" *ngIf="swapMessageType === 'error'">❌</span>
+        <span class="swap-message-icon" *ngIf="swapMessageType === 'info'">⏳</span>
+        <span>{{ swapMessage }}</span>
+      </div>
+
+      <!-- Transaction Pending Overlay -->
+      <div *ngIf="txPending" class="tx-pending-overlay">
+        <div class="tx-pending-content">
+          <div class="tx-spinner"></div>
+          <p class="tx-pending-text">Processing blockchain transaction...</p>
+          <p class="tx-pending-sub">Please confirm in MetaMask</p>
+        </div>
+      </div>
+
+      <!-- Wallet Connect + Swap Section -->
+      <div class="swap-section">
+        <!-- Connect Wallet Button -->
+        <button *ngIf="!walletConnected && hasMetaMask" class="wallet-btn"
+          [disabled]="walletConnecting" (click)="connectWallet()">
+          <span *ngIf="!walletConnecting">🦊 Connect MetaMask</span>
+          <span *ngIf="walletConnecting" class="btn-loading">
+            <span class="loading-spinner"></span>
+            Connecting...
+          </span>
+        </button>
+
+        <!-- The MetaMask mobile notice is no longer needed here since we gate the whole page, but keeping for desktop edge cases -->
+        <div *ngIf="!hasMetaMask && !isMobile" class="metamask-notice">
+          <p>⚠️ MetaMask not detected. <a href="https://metamask.io/download/" target="_blank">Install MetaMask extension</a> to use paid swaps.</p>
+        </div>
+
+        <!-- Wallet Connected Badge -->
+        <div *ngIf="walletConnected" class="wallet-badge">
+          <span class="wallet-dot"></span>
+          <span>{{ walletAddress?.slice(0, 6) }}...{{ walletAddress?.slice(-4) }}</span>
+          <span class="wallet-network">Amoy</span>
+        </div>
+
+        <!-- Price Input + Swap Button -->
+        <div *ngIf="walletConnected && !swapRequested" class="swap-controls">
+          <div class="price-input-group">
+            <label for="swapPrice">💰 Offer Price (POL)</label>
+            <div class="price-input-wrapper">
+              <input type="number" id="swapPrice" name="swapPrice"
+                [(ngModel)]="swapPrice" min="0.001" step="0.001"
+                placeholder="0.01" class="price-input" />
+              <span class="price-unit">POL</span>
+            </div>
+          </div>
+          <button class="swap-btn" [disabled]="swapPending || txPending" (click)="requestSwap()">
+            <span *ngIf="!swapPending">🔄 Swap Position ({{ swapPrice }} POL)</span>
+            <span *ngIf="swapPending" class="btn-loading">
+              <span class="loading-spinner"></span>
+              Processing...
+            </span>
+          </button>
+        </div>
+
+        <!-- Swap Requested State -->
+        <div *ngIf="swapRequested" class="swap-requested-info">
+          <p class="swap-requested-label">🔄 Swap offer active — {{ swapPrice }} POL</p>
+          <button class="swap-btn swap-btn-cancel" (click)="cancelSwap()">✖ Cancel Swap</button>
+        </div>
+
+        <!-- Tx Hash Link -->
+        <div *ngIf="txHash" class="tx-hash-link">
+          <a [href]="'https://amoy.polygonscan.com/tx/' + txHash" target="_blank">
+            View on PolygonScan ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- Incoming Swap Requests -->
+      <div *ngIf="incomingSwaps.length > 0" class="incoming-swaps">
+        <div class="incoming-swaps-header">
+          <span class="pulse-dot"></span>
+          <h3>Incoming Swap Offers</h3>
+        </div>
+        <div *ngFor="let swap of incomingSwaps" class="swap-card slide-in">
+          <div class="swap-card-info">
+            <div class="swap-card-avatar" [ngClass]="{'blockchain-avatar': swap.isBlockchain}">
+              {{ swap.isBlockchain ? '⛓️' : '🔄' }}
+            </div>
+            <div class="swap-card-details">
+              <span class="swap-card-name">{{ swap.requesterName }}</span>
+              <span class="swap-card-token">Token #{{ swap.requesterTokenNumber }}</span>
+            </div>
+            <div *ngIf="swap.isBlockchain" class="price-badge">
+              {{ swap.priceFormatted }} POL
+            </div>
+          </div>
+          <p class="swap-card-desc">
+            {{ swap.isBlockchain ? 'wants to swap positions — paying' : 'wants to swap positions with you' }}
+            <strong *ngIf="swap.isBlockchain"> {{ swap.priceFormatted }} POL</strong>
+          </p>
+          <div class="swap-card-actions">
+            <button class="swap-accept-btn" [disabled]="txPending" (click)="acceptSwap(swap)">
+              ✅ Accept{{ swap.isBlockchain ? ' (on-chain)' : '' }}
+            </button>
+            <button class="swap-decline-btn" (click)="declineSwap(swap)">❌ Decline</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Queue Details List -->
+      <div *ngIf="showQueueDetails" class="queue-details">
+        <div class="divider"></div>
+        <h3>Current Queue ({{ totalInQueue }})</h3>
+
+        <div class="queue-list">
+          <div *ngFor="let entry of queueDetails" class="queue-item"
+            [class.current-user]="entry.uniqueId === uniqueId">
+            <div class="queue-token">#{{ entry.tokenNumber }}</div>
+            <div class="queue-info">
+              <span class="queue-name">{{ entry.userName }}</span>
+              <span class="queue-status">Waiting</span>
+            </div>
+            <div *ngIf="entry.uniqueId === uniqueId" class="you-badge">YOU</div>
+          </div>
+        </div>
+
+        <div *ngIf="queueDetails.length === 0" class="empty-queue">
+          <p>You are the first one! 🎉</p>
+        </div>
+      </div>
+    </div>
+    </ng-container>
+  </div>
+</div>

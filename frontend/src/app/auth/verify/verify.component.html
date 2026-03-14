@@ -1,0 +1,32 @@
+<div class="container">
+    <div class="card">
+        <!-- Loading State -->
+        <div *ngIf="status === 'loading'" class="status-container">
+            <div class="status-icon loading">
+                <div class="loading-spinner large"></div>
+            </div>
+            <h2>Verifying Email...</h2>
+            <p class="text-secondary">Please wait while we verify your email address</p>
+        </div>
+
+        <!-- Success State -->
+        <div *ngIf="status === 'success'" class="status-container">
+            <div class="status-icon success">✅</div>
+            <h2 class="text-gradient">Email Verified!</h2>
+            <p class="text-secondary mb-4">{{ message }}</p>
+            <a routerLink="/login" class="btn-link">
+                Proceed to Login →
+            </a>
+        </div>
+
+        <!-- Error State -->
+        <div *ngIf="status === 'error'" class="status-container">
+            <div class="status-icon error">❌</div>
+            <h2>Verification Failed</h2>
+            <p class="text-secondary mb-4">{{ message }}</p>
+            <a routerLink="/login" class="btn-link secondary">
+                Back to Login
+            </a>
+        </div>
+    </div>
+</div>
