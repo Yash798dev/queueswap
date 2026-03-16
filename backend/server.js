@@ -57,6 +57,7 @@ app.get('/api/admin/details/:type', adminController.getDetailedStats);
 app.post('/api/business/submit', businessController.submitBusiness);
 app.get('/api/business/pending', businessController.getPendingBusinesses);
 app.put('/api/business/:id/status', businessController.updateStatus);
+app.get('/api/business/:id/analytics', businessController.getBusinessAnalytics);
 app.post('/api/business/:id/join', businessController.joinQueue);
 app.get('/api/business/:id/join', businessController.joinQueue);
 app.put('/api/business/queue/update', businessController.updateQueueEntry);

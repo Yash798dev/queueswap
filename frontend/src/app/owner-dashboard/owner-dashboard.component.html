@@ -4,65 +4,157 @@
         <div class="header-content">
             <div class="logo">
                 <span class="logo-icon">👔</span>
-                <span class="logo-text">Owner Dashboard</span>
+                <span class="logo-text">Owner Portal</span>
             </div>
+            
+            <nav class="tab-nav">
+                <button [class.active]="activeTab === 'overview'" (click)="setTab('overview')" class="tab-btn">
+                    <span class="tab-icon">📊</span> Overview
+                </button>
+                <button [class.active]="activeTab === 'queue'" (click)="setTab('queue')" class="tab-btn">
+                    <span class="tab-icon">👥</span> Live Queue
+                </button>
+            </nav>
+
             <button (click)="logout()" class="btn-logout">
-                <span class="btn-icon">🚪</span>
-                Logout
+                <span class="btn-icon">🚪</span> Logout
             </button>
         </div>
     </header>
 
-    <!-- Welcome Section -->
-    <section class="welcome-section">
-        <div class="welcome-card">
-            <div class="avatar">
-                <span>{{ user?.name?.charAt(0)?.toUpperCase() || 'O' }}</span>
-            </div>
-            <h1>Welcome, <span class="text-gradient">{{ user?.name || 'Owner' }}</span>!</h1>
-            <p class="subtitle">Manage your business queue</p>
-        </div>
-    </section>
-
-    <!-- Business Info -->
-    <section class="business-section" *ngIf="!isLoading && business">
-        <div class="business-card">
-            <h2>📊 Your Business</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="label">Business Name:</span>
-                    <span class="value">{{ business.name }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Category:</span>
-                    <span class="value">{{ business.category }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Location:</span>
-                    <span class="value">{{ business.location }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Current Queue:</span>
-                    <span class="value queue-count">{{ business.queue || 0 }}</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Actions -->
-    <section class="actions-section">
-        <button (click)="goToQueueManagement()" class="action-btn primary">
-            <span class="btn-icon">🎫</span>
-            <div class="btn-content">
-                <h3>Manage Queue</h3>
-                <p>Mark customers as served</p>
-            </div>
-        </button>
-    </section>
-
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-container">
-        <div class="spinner"></div>
-        <p>Loading your business info...</p>
+    <div *ngIf="isLoading" class="loading-container" style="padding: 10rem 0;">
+        <div class="spinner large"></div>
+        <p class="text-secondary mt-3">Loading your dashboard securely...</p>
     </div>
+
+    <ng-container *ngIf="!isLoading && business && activeTab === 'overview'">
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <div class="welcome-text">
+                <h1>Welcome back, <span class="text-gradient">{{ user?.name }}</span>!</h1>
+                <p class="subtitle">Here's what's happening at <strong>{{ business.name }}</strong> today.</p>
+            </div>
+        </section>
+
+        <!-- Analytics Overview -->
+        <ng-container *ngIf="analyticsData">
+            <!-- Stat Cards -->
+            <div class="dashboard-grid">
+                <div class="analytics-card" style="--card-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                    <div class="card-header">
+                        <span class="card-title">Currently Waiting</span>
+                        <div class="card-icon icon-users">🕒</div>
+                    </div>
+                    <div>
+                        <div class="card-value">{{ analyticsData.overview.currentlyWaiting }}</div>
+                        <div class="card-subtext">Active customers in queue</div>
+                    </div>
+                </div>
+
+                <div class="analytics-card" style="--card-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <div class="card-header">
+                        <span class="card-title">Customers Served</span>
+                        <div class="card-icon icon-biz">✅</div>
+                    </div>
+                    <div>
+                        <div class="card-value">{{ analyticsData.overview.totalServed }}</div>
+                        <div class="card-subtext">Total customers passed through</div>
+                    </div>
+                </div>
+
+                <div class="analytics-card" style="--card-gradient: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">
+                    <div class="card-header">
+                        <span class="card-title">Successful Swaps</span>
+                        <div class="card-icon icon-swap">🔄</div>
+                    </div>
+                    <div>
+                        <div class="card-value">{{ analyticsData.overview.swapsCompleted }}</div>
+                        <div class="card-subtext">Total tokens exchanged</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analytics-split-layout">
+                <!-- Activity Chart -->
+                <div class="chart-container">
+                    <div class="table-header">
+                        <h2>📈 Activity Trends</h2>
+                        <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">Last 7 Days</span>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas baseChart
+                            [data]="lineChartData"
+                            [options]="lineChartOptions"
+                            [type]="'line'">
+                        </canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Table with Filters -->
+                <div class="activity-container">
+                    <div class="table-header" style="flex-wrap: wrap; gap: 1rem;">
+                        <h2>📋 Recent Transactions</h2>
+                        
+                        <!-- Filters -->
+                        <div class="filter-controls">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()" placeholder="Search by name or token..." class="input-search">
+                            </div>
+                            
+                            <select [(ngModel)]="filterType" (ngModelChange)="applyFilters()" class="select-filter">
+                                <option value="all">All Activity</option>
+                                <option value="served">Customers Served</option>
+                                <option value="swap">Token Swaps</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="table-wrapper">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Details</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of filteredActivity">
+                                    <td>
+                                        <div class="event-cell">
+                                            <div class="event-icon" [ngClass]="item.type === 'swap' ? 'icon-swap' : 'icon-served'">
+                                                {{ item.type === 'swap' ? '🔄' : '✅' }}
+                                            </div>
+                                            <span class="event-title">{{ item.title }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="event-desc">{{ item.description }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="event-time">{{ item.timestamp | date:'short' }}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div *ngIf="filteredActivity.length === 0" class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <p class="text-secondary">No recent activity matches your filters.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+    </ng-container>
+    
+    <ng-container *ngIf="!isLoading && !business">
+        <div class="empty-state centered" style="margin-top: 5rem;">
+            <div class="empty-icon">⏳</div>
+            <h2>Registration Pending</h2>
+            <p class="text-secondary">Your business registration is currently under review by an administrator.<br>Please check back later.</p>
+        </div>
+    </ng-container>
 </div>

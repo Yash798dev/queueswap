@@ -213,6 +213,85 @@ exports.getQueueEntries = async (req, res) => {
     }
 };
 
+// ==================== ANALYTICS ENDPOINTS ====================
+
+// Get Dashboard Analytics for a specific business
+exports.getBusinessAnalytics = async (req, res) => {
+    try {
+        const { id } = req.params; // businessId
+
+        console.log(`[DEBUG] Fetching analytics for business: ${id}`);
+
+        // 1. Queue Statistics
+        const currentlyWaiting = await QueueEntry.countDocuments({ businessId: id, status: 'Waiting' });
+        const totalServed = await QueueEntry.countDocuments({ businessId: id, status: 'Served' });
+
+        // 2. Swap Statistics
+        const swapsCompleted = await SwapRequest.countDocuments({ businessId: id, status: 'Accepted' });
+
+        // 3. Recent Activity History (Combine served customers and accepted swaps)
+        // Fetch recently served customers
+        const recentServed = await QueueEntry.find({ businessId: id, status: 'Served' })
+            .sort({ updatedAt: -1 })
+            .limit(20)
+            .lean();
+
+        // Fetch recent completed swaps
+        const recentSwaps = await SwapRequest.find({ businessId: id, status: 'Accepted' })
+            .populate('requesterId', 'name')
+            .populate('targetUserId', 'name')
+            .sort({ updatedAt: -1 })
+            .limit(20)
+            .lean();
+
+        // Format activity log for the frontend table
+        const activityLog = [];
+
+        recentServed.forEach(entry => {
+            activityLog.push({
+                type: 'served',
+                title: 'Customer Served',
+                description: `${entry.userName} (Token #${entry.tokenNumber}) completed their queue placement.`,
+                timestamp: entry.updatedAt,
+                phone: entry.userPhone,
+                tokenNumber: entry.tokenNumber
+            });
+        });
+
+        recentSwaps.forEach(swap => {
+            activityLog.push({
+                type: 'swap',
+                title: 'Successful Swap',
+                description: `${swap.requesterName} (Token #${swap.requesterTokenNumber}) swapped with ${swap.acceptedByName} (Token #${swap.acceptedByTokenNumber}).`,
+                timestamp: swap.updatedAt,
+                tokenNumber: swap.requesterTokenNumber
+            });
+        });
+
+        // Sort combined activity by newest first
+        activityLog.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        // 4. Time-series data for the graph (Mocking last 7 days of activity)
+        // In a real production app, this would be an aggregation pipeline grouping by $dayOfYear on the createdAt timestamp
+        // For right now, we will return the raw counts and let the frontend format it or mock the previous days.
+
+        const analyticsData = {
+            overview: {
+                currentlyWaiting,
+                totalServed,
+                swapsCompleted
+            },
+            recentActivity: activityLog.slice(0, 30) // Take top 30 mixed events
+        };
+
+        res.json(analyticsData);
+
+    } catch (error) {
+        console.error('[ERROR] Error fetching business analytics:', error);
+        res.status(500).json({ message: 'Error fetching business analytics', error: error.message });
+    }
+};
+
 // ==================== SWAP ENDPOINTS ====================
 
 // Request a swap — creates a pending swap request, cancelling any prior ones

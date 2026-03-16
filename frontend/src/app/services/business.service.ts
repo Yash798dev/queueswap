@@ -34,6 +34,13 @@ export class BusinessService {
         );
     }
 
+    getAnalytics(businessId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/${businessId}/analytics`).pipe(
+            timeout(5000),
+            catchError(this.handleError)
+        );
+    }
+
     private handleError(error: any) {
         if (error.name === 'TimeoutError') {
             return throwError(() => ({ error: { message: 'Request timed out. Please check your internet connection or try again later.' } }));
