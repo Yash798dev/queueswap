@@ -14,7 +14,7 @@ export class AuthService {
 
     register(user: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/register`, user).pipe(
-            timeout(5000),
+            timeout(30000),
             catchError(this.handleError)
         );
     }
@@ -22,7 +22,7 @@ export class AuthService {
     login(credentials: any): Observable<any> {
         return this.http.post<{ token: string, user: any }>(`${this.apiUrl}/login`, credentials)
             .pipe(
-                timeout(5000),
+                timeout(30000),
                 tap(response => {
                     if (response.token) {
                         this.saveToken(response.token);
@@ -36,7 +36,7 @@ export class AuthService {
 
     verify(token: string): Observable<any> {
         return this.http.get(`${this.apiUrl}/verify/${token}`).pipe(
-            timeout(5000),
+            timeout(60000),
             catchError(this.handleError)
         );
     }
