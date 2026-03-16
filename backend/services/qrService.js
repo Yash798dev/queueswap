@@ -34,8 +34,8 @@ function getLocalIpAddress() {
 exports.generateBusinessQRCode = async (business) => {
     try {
         const ip = getLocalIpAddress();
-        // Point to Angular Frontend on Render
-        const qrData = `https://queueswap-app.onrender.com/queue-join/${business._id}`;
+        // Point to Angular Frontend on Render using Hash Routing
+        const qrData = `https://queueswap-app.onrender.com/#/queue-join/${business._id}`;
 
         // Generate QR Code as Data URL
         const qrCodeDataURL = await QRCode.toDataURL(qrData);
