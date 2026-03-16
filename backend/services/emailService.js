@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 exports.sendVerificationEmail = async (email, token) => {
-    const verificationLink = `http://localhost:4200/verify/${token}`;
+    const verificationLink = `https://queueswap-app.onrender.com/verify/${token}`;
 
     const mailOptions = {
         from: process.env.EMAIL_USER,

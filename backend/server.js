@@ -9,7 +9,14 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        'https://queueswap-app.onrender.com',
+        'https://queueswap-landing.onrender.com',
+        'http://localhost:4200'
+    ],
+    credentials: true
+}));
 app.use(express.json());
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/queue_swap';
