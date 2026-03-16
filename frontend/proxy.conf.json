@@ -1,6 +1,6 @@
 {
   "/api": {
-    "target": "https://queueswap-production.up.railway.app",
+    "target": "https://queueswap-backend.onrender.com",
     "secure": true,
     "changeOrigin": true,
     "logLevel": "debug"
