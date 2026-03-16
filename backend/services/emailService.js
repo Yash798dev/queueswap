@@ -3,7 +3,9 @@ const nodemailer = require('nodemailer');
 // Use environment variables for real credentials
 // For dev: Ethereal Email or console log if no credentials
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // or your preferred service
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -92,7 +94,9 @@ async function sendEmail(mailOptions) {
             return;
         }
         const transporter = require('nodemailer').createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
