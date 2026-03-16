@@ -83,15 +83,12 @@ exports.getDetailedStats = async (req, res) => {
             case 'swaps':
                 // Fetch completed swaps
                 data = await SwapRequest.find({ status: 'Accepted' })
-                    .populate('requesterId', 'name email')
-                    .populate('targetUserId', 'name email')
                     .populate('businessId', 'name')
                     .sort({ createdAt: -1 });
                 break;
             case 'queue':
                 // Fetch all queue entries (Served)
                 data = await QueueEntry.find({ status: 'Served' })
-                    .populate('userId', 'name email')
                     .populate('businessId', 'name')
                     .sort({ createdAt: -1 });
                 break;

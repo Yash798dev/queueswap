@@ -309,9 +309,9 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>{{ item.requesterId?.name }}<br><small style="color: #9ca3af">Token: {{ item.requesterTokenNumber }}</small></td>
-                                <td>{{ item.targetUserId?.name }}</td>
-                                <td>Token {{ item.targetTokenNumber }}</td>
+                                <td>{{ item.requesterName }}<br><small style="color: #9ca3af">Token: {{ item.requesterTokenNumber }}</small></td>
+                                <td>{{ item.acceptedByName || 'Unknown' }}</td>
+                                <td>Token {{ item.acceptedByTokenNumber || 'Unknown' }}</td>
                                 <td>
                                     <span class="stat-badge" [ngClass]="{'high': item.status === 'Accepted', 'low': item.status === 'Pending', 'medium': item.status === 'Rejected'}">
                                         {{ item.status }}
@@ -330,7 +330,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>{{ item.userId?.name }}<br><small style="color: #9ca3af">{{ item.userId?.email }}</small></td>
+                                <td>{{ item.userName }}<br><small style="color: #9ca3af">{{ item.userPhone }}</small></td>
                                 <td>{{ item.businessId?.name }}</td>
                                 <td>
                                     <span class="stat-badge high">
