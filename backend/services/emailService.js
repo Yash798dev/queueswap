@@ -1,110 +1,86 @@
-const nodemailer = require('nodemailer');
+// Google Apps Script Email Service
+// Uses HTTP POST to a Google Apps Script Web App to send emails
+// This bypasses SMTP restrictions on hosting platforms like Render
 
-// Use environment variables for real credentials
-// For dev: Ethereal Email or console log if no credentials
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL;
+
+/**
+ * Send an email via Google Apps Script
+ * @param {string} toEmail - Recipient email
+ * @param {string} subject - Email subject
+ * @param {string} htmlBody - HTML content of the email
+ * @param {string|null} qrCodeBase64 - Optional base64-encoded QR code image (without data URL prefix)
+ */
+async function sendEmailViaGoogle(toEmail, subject, htmlBody, qrCodeBase64 = null) {
+    if (!GOOGLE_SCRIPT_URL) {
+        console.log('---------------------------------------------------');
+        console.log(`EMAIL SERVICE (Mock) - Subject: ${subject}`);
+        console.log(`To: ${toEmail}`);
+        console.log('---------------------------------------------------');
+        return;
     }
-});
+
+    const payload = {
+        to: toEmail,
+        subject: subject,
+        htmlBody: htmlBody,
+        qrCodeBase64: qrCodeBase64
+    };
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            redirect: 'follow'
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            console.log(`Email sent successfully to ${toEmail}`);
+        } else {
+            console.error('Google Script Error:', result.message);
+        }
+    } catch (error) {
+        console.error('Failed to send email via Google Script:', error);
+    }
+}
+
+// --- Exported Functions ---
 
 exports.sendVerificationEmail = async (email, token) => {
     const verificationLink = `https://queueswap-app.onrender.com/verify/${token}`;
 
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Queue Swap - Email Verification',
-        html: `
+    const htmlBody = `
       <h3>Welcome to Queue Swap!</h3>
       <p>Please click the link below to verify your email address:</p>
       <a href="${verificationLink}">${verificationLink}</a>
-    `
-    };
+    `;
 
-    try {
-        if (!process.env.EMAIL_USER) {
-            console.log('---------------------------------------------------');
-            console.log('EMAIL SERVICE (Mock):');
-            console.log(`To: ${email}`);
-            console.log(`Link: ${verificationLink}`);
-            console.log('---------------------------------------------------');
-            return;
-        }
-
-        await transporter.sendMail(mailOptions);
-        console.log('Verification email sent to:', email);
-    } catch (error) {
-        console.error('Error sending email:', error);
-    }
+    await sendEmailViaGoogle(email, 'Queue Swap - Email Verification', htmlBody);
 };
 
 exports.sendApprovalEmail = async (email, businessName, qrCodeDataURL) => {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Queue Swap - Business Approved',
-        html: `
+    const htmlBody = `
       <h3>Good News!</h3>
       <p>Your business <strong>${businessName}</strong> has been approved.</p>
       <p>You can now manage your queues on our platform.</p>
       <p>Here is your unique QR code:</p>
-      <img src="cid:unique-qrcode" alt="Business QR Code" width="200" />
-    `,
-        attachments: [
-            {
-                filename: 'qrcode.png',
-                content: qrCodeDataURL.split("base64,")[1],
-                encoding: 'base64',
-                cid: 'unique-qrcode' // referenced in the html img src
-            }
-        ]
-    };
+    `;
 
-    await sendEmail(mailOptions);
+    // Extract the base64 data from the data URL (remove "data:image/png;base64," prefix)
+    const qrCodeBase64 = qrCodeDataURL ? qrCodeDataURL.split("base64,")[1] : null;
+
+    await sendEmailViaGoogle(email, 'Queue Swap - Business Approved', htmlBody, qrCodeBase64);
 };
 
 exports.sendRejectionEmail = async (email, businessName) => {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Queue Swap - Business Rejected',
-        html: `
+    const htmlBody = `
       <h3>Update on your request</h3>
       <p>We regret to inform you that your business <strong>${businessName}</strong> has been rejected.</p>
       <p>Please contact support for more details.</p>
-    `
-    };
+    `;
 
-    await sendEmail(mailOptions);
+    await sendEmailViaGoogle(email, 'Queue Swap - Business Rejected', htmlBody);
 };
-
-// Helper to avoid code duplication and handle mock sending
-async function sendEmail(mailOptions) {
-    try {
-        if (!process.env.EMAIL_USER) {
-            console.log('---------------------------------------------------');
-            console.log(`EMAIL SERVICE (Mock) - Subject: ${mailOptions.subject}`);
-            console.log(`To: ${mailOptions.to}`);
-            console.log('---------------------------------------------------');
-            return;
-        }
-        const transporter = require('nodemailer').createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-        await transporter.sendMail(mailOptions);
-        console.log(`Email sent to: ${mailOptions.to}`);
-    } catch (error) {
-        console.error('Error sending email:', error);
-    }
-}
