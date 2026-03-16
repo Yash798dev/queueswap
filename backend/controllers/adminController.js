@@ -81,8 +81,8 @@ exports.getDetailedStats = async (req, res) => {
                 data = await Business.find().populate('userId', 'name email').sort({ createdAt: -1 });
                 break;
             case 'swaps':
-                // Fetch all swaps
-                data = await SwapRequest.find()
+                // Fetch completed swaps
+                data = await SwapRequest.find({ status: 'Accepted' })
                     .populate('requesterId', 'name email')
                     .populate('targetUserId', 'name email')
                     .populate('businessId', 'name')
@@ -90,7 +90,7 @@ exports.getDetailedStats = async (req, res) => {
                 break;
             case 'queue':
                 // Fetch all queue entries (Served)
-                data = await QueueEntry.find()
+                data = await QueueEntry.find({ status: 'Served' })
                     .populate('userId', 'name email')
                     .populate('businessId', 'name')
                     .sort({ createdAt: -1 });
