@@ -48,6 +48,10 @@ app.post('/api/auth/register', authController.register);
 app.post('/api/auth/login', authController.login);
 app.get('/api/auth/verify/:token', authController.verify);
 
+// Admin Routes
+const adminController = require('./controllers/adminController');
+app.get('/api/admin/analytics', adminController.getAnalytics);
+
 // Business Routes
 app.post('/api/business/submit', businessController.submitBusiness);
 app.get('/api/business/pending', businessController.getPendingBusinesses);

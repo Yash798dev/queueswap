@@ -7,48 +7,148 @@
                 <span class="logo-text text-gradient">Admin Dashboard</span>
             </div>
             <button (click)="logout()" class="btn-logout">
-                <span class="btn-icon">🚪</span>
+                <span>🚪</span>
                 Logout
             </button>
         </div>
     </header>
 
-    <!-- Stats Section -->
-    <section class="stats-section">
-        <div class="stat-card">
-            <div class="stat-icon pending">📋</div>
-            <div class="stat-info">
-                <h3>{{ pendingBusinesses.length }}</h3>
-                <p>Pending Requests</p>
-            </div>
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <button class="tab-btn" [class.active]="activeTab === 'analytics'" (click)="setTab('analytics')">
+            📊 Analytics Overview
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'approvals'" (click)="setTab('approvals')">
+            📝 Pending Approvals
+            <span class="stat-badge low" *ngIf="pendingBusinesses.length > 0">{{ pendingBusinesses.length }}</span>
+        </button>
+    </div>
+
+    <!-- Analytics Dashboard Tab -->
+    <section class="content-section" *ngIf="activeTab === 'analytics'">
+        
+        <div *ngIf="loadingAnalytics" class="loading-container">
+            <div class="loading-spinner large"></div>
+            <p class="text-secondary mt-3">Gathering platform analytics...</p>
         </div>
+
+        <ng-container *ngIf="!loadingAnalytics && analyticsData">
+            <!-- Overview Cards -->
+            <div class="dashboard-grid">
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #3b82f6, #60a5fa);">
+                    <div class="card-header">
+                        <span class="card-title">Total Users</span>
+                        <div class="card-icon icon-users">👥</div>
+                    </div>
+                    <div>
+                        <div class="card-value">{{ analyticsData.platform.users + analyticsData.platform.owners }}</div>
+                        <div class="card-subtext">{{ analyticsData.platform.owners }} Business Owners</div>
+                    </div>
+                </div>
+
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #10b981, #34d399);">
+                    <div class="card-header">
+                        <span class="card-title">Active Businesses</span>
+                        <div class="card-icon icon-biz">🏢</div>
+                    </div>
+                    <div>
+                        <div class="card-value">{{ analyticsData.platform.approvedBusinesses }}</div>
+                        <div class="card-subtext">{{ analyticsData.platform.pendingBusinesses }} Pending</div>
+                    </div>
+                </div>
+
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #ec4899, #f472b6);">
+                    <div class="card-header">
+                        <span class="card-title">Completed Swaps</span>
+                        <div class="card-icon icon-swap">🔄</div>
+                    </div>
+                    <div>
+                        <div class="card-value">{{ analyticsData.platform.swapsCompleted }}</div>
+                        <div class="card-subtext">{{ analyticsData.platform.swapsRequested }} Total Requests</div>
+                    </div>
+                </div>
+
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #8b5cf6, #a78bfa);">
+                    <div class="card-header">
+                        <span class="card-title">Customers Served</span>
+                        <div class="card-icon icon-queue">✅</div>
+                    </div>
+                    <div>
+                        <div class="card-value">{{ analyticsData.platform.totalServed }}</div>
+                        <div class="card-subtext">{{ analyticsData.platform.totalWaiting }} Currently Waiting</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Stats Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h2>🏢 Business Performance Analytics</h2>
+                </div>
+                
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Business Details</th>
+                            <th>Active Queue</th>
+                            <th>Total Served</th>
+                            <th>Successful Swaps</th>
+                            <th>Owner</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let biz of analyticsData.businessStats">
+                            <td>
+                                <div class="biz-name-cell">
+                                    <div class="biz-avatar">
+                                        {{ biz.name.charAt(0).toUpperCase() }}
+                                    </div>
+                                    <div>
+                                        <span class="biz-name">{{ biz.name }}</span>
+                                        <span class="biz-category">{{ biz.category }} • {{ biz.location }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="stat-badge" [ngClass]="{'high': biz.currentlyWaiting > 10, 'medium': biz.currentlyWaiting > 0, 'low': biz.currentlyWaiting === 0}">
+                                    {{ biz.currentlyWaiting }} waiting
+                                </span>
+                            </td>
+                            <td style="font-weight: 600;">{{ biz.totalServed }}</td>
+                            <td>{{ biz.swapsCompleted }}</td>
+                            <td class="biz-category">{{ biz.ownerName }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div *ngIf="analyticsData.businessStats.length === 0" class="empty-state" style="padding: 2rem;">
+                    <p class="text-secondary">No approved businesses yet to display statistics.</p>
+                </div>
+            </div>
+        </ng-container>
     </section>
 
-    <!-- Main Content -->
-    <section class="content-section">
+    <!-- Pending Approvals Tab -->
+    <section class="content-section" *ngIf="activeTab === 'approvals'">
         <div class="section-header">
             <h2>
-                <span class="header-icon">📝</span>
-                Pending Approvals
+                <span>📝</span>
+                Pending Requests
             </h2>
-            <p class="text-secondary">Review and manage business registration requests</p>
+            <p class="text-secondary">Review and manage business registration applications</p>
         </div>
 
-        <!-- Loading State -->
-        <div *ngIf="loading" class="loading-container">
+        <div *ngIf="loadingApprovals" class="loading-container">
             <div class="loading-spinner large"></div>
             <p class="text-secondary mt-3">Loading pending requests...</p>
         </div>
 
-        <!-- Empty State -->
-        <div *ngIf="!loading && pendingBusinesses.length === 0" class="empty-state">
+        <div *ngIf="!loadingApprovals && pendingBusinesses.length === 0" class="empty-state">
             <div class="empty-icon">🎉</div>
-            <h3>All Caught Up!</h3>
+            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; font-weight: 700;">All Caught Up!</h3>
             <p class="text-secondary">No pending business requests at the moment.</p>
         </div>
 
-        <!-- Business Cards -->
-        <div class="request-list">
+        <div class="request-list" *ngIf="!loadingApprovals && pendingBusinesses.length > 0">
             <div *ngFor="let business of pendingBusinesses; let i = index" class="request-card" [style.--index]="i">
                 <div class="card-content">
                     <div class="business-header">
@@ -63,15 +163,15 @@
 
                     <div class="details-grid">
                         <div class="detail-item">
-                            <span class="detail-icon">📍</span>
+                            <span>📍</span>
                             <span>{{ business.location }}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-icon">📱</span>
+                            <span>📱</span>
                             <span>{{ business.mobile }}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-icon">👤</span>
+                            <span>👤</span>
                             <span>{{ business.userId?.name }} ({{ business.userId?.email }})</span>
                         </div>
                     </div>
