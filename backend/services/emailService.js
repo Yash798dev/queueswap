@@ -63,11 +63,11 @@ exports.sendVerificationEmail = async (email, token) => {
       Welcome to <strong>Queue Swap</strong>! We are excited to have you on board. Please verify your email address to complete your registration and get started.
     </p>
     <div style="text-align: center; margin-bottom: 30px;">
-      <a href="\${verificationLink}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%); color: #ffffff; font-weight: bold; font-size: 16px; text-decoration: none; padding: 14px 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);">Verify Email Address</a>
+      <a href="${verificationLink}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%); color: #ffffff; font-weight: bold; font-size: 16px; text-decoration: none; padding: 14px 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);">Verify Email Address</a>
     </div>
     <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin-bottom: 0;">
       If the button doesn't work, copy and paste the following link into your browser:<br>
-      <a href="\${verificationLink}" style="color: #4f46e5; word-break: break-all;">\${verificationLink}</a>
+      <a href="${verificationLink}" style="color: #4f46e5; word-break: break-all;">${verificationLink}</a>
     </p>
   </div>
   <div style="text-align: center; margin-top: 30px; color: #9ca3af; font-size: 13px;">
