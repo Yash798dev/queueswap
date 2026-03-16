@@ -50,7 +50,7 @@ async function sendEmailViaGoogle(toEmail, subject, htmlBody, qrCodeBase64 = nul
 // --- Exported Functions ---
 
 exports.sendVerificationEmail = async (email, token) => {
-    const verificationLink = `https://queueswap-app.onrender.com/verify/${token}`;
+    const verificationLink = `https://queueswap-backend.onrender.com/api/auth/verify/${token}`;
 
     const htmlBody = `
       <h3>Welcome to Queue Swap!</h3>

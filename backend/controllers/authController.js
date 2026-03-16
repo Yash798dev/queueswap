@@ -39,19 +39,22 @@ exports.register = async (req, res) => {
 exports.verify = async (req, res) => {
     try {
         const { token } = req.params;
+        const frontendUrl = 'https://queueswap-app.onrender.com';
 
         const user = await User.findOne({ verificationToken: token });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid or expired token' });
+            return res.redirect(`${frontendUrl}/login?verified=false&error=invalid_token`);
         }
 
         user.isVerified = true;
         user.verificationToken = undefined; // Clear token
         await user.save();
 
-        res.json({ message: 'Email verified successfully. You can now login.' });
+        // Redirect to frontend login page with success indicator
+        res.redirect(`${frontendUrl}/login?verified=true`);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Verification error:', error);
+        res.redirect('https://queueswap-app.onrender.com/login?verified=false&error=server_error');
     }
 };
 

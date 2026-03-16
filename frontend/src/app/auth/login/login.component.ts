@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -92,15 +92,36 @@ import { AuthService } from '../../services/auth.service';
         }
     `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
     credentials = {
         email: '',
         password: ''
     };
     loading = false;
     error = '';
+    successMessage = '';
 
-    constructor(private authService: AuthService, private router: Router) { }
+    constructor(
+        private authService: AuthService, 
+        private router: Router,
+        private route: ActivatedRoute
+    ) { }
+
+    ngOnInit() {
+        this.route.queryParams.subscribe(params => {
+            if (params['verified'] === 'true') {
+                this.successMessage = 'Email verified successfully! You can now sign in.';
+                this.error = '';
+            } else if (params['verified'] === 'false') {
+                if (params['error'] === 'invalid_token') {
+                    this.error = 'Verification failed: Invalid or expired token.';
+                } else {
+                    this.error = 'Verification failed: Server error, please try again.';
+                }
+                this.successMessage = '';
+            }
+        });
+    }
 
     onSubmit() {
         this.loading = true;
