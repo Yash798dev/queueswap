@@ -27,8 +27,10 @@ exports.register = async (req, res) => {
 
         await newUser.save();
 
-        // Send email
-        await emailService.sendVerificationEmail(email, verificationToken);
+        // Send email asynchronously so we don't block the API response
+        emailService.sendVerificationEmail(email, verificationToken).catch(err => {
+            console.error('Failed to send verification email asynchronously:', err);
+        });
 
         res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.' });
     } catch (error) {

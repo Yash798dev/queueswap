@@ -399,6 +399,7 @@ h3 { font-size: 1.3rem; color: #1f2937; margin: 0 0 20px 0; font-weight: 800; di
     width: 100%;
     padding: 16px 20px;
     font-size: 1.05rem;
+    color: #000000;
     border: 2px solid #e5e7eb;
     border-radius: 16px;
     transition: all 0.3s ease;

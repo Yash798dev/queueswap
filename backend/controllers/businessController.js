@@ -63,11 +63,11 @@ exports.updateStatus = async (req, res) => {
             console.log(`[DEBUG] User ${business.userId._id} role updated to "owner"`);
 
             await business.save();
-            await emailService.sendApprovalEmail(business.userId.email, business.name, qrCodeDataURL);
+            emailService.sendApprovalEmail(business.userId.email, business.name, qrCodeDataURL).catch(err => console.error('Error sending approval email asynchronously:', err));
         } else {
             await business.save();
             if (status === 'Rejected') {
-                await emailService.sendRejectionEmail(business.userId.email, business.name);
+                emailService.sendRejectionEmail(business.userId.email, business.name).catch(err => console.error('Error sending rejection email asynchronously:', err));
             }
         }
 
