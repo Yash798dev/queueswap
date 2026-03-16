@@ -52,7 +52,7 @@ exports.verify = async (req, res) => {
         await user.save();
 
         // Redirect directly to the login route with success query param
-        res.redirect(`${loginUrl}?verified=true`);
+        res.redirect(`${loginUrl}`);
     } catch (error) {
         console.error('Verification error:', error);
         res.redirect('https://queueswap-app.onrender.com/login?verified=false&error=server_error');
