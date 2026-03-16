@@ -35,7 +35,7 @@
         <ng-container *ngIf="!loadingAnalytics && analyticsData">
             <!-- Overview Cards -->
             <div class="dashboard-grid">
-                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #3b82f6, #60a5fa);">
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #3b82f6, #60a5fa); cursor: pointer;" (click)="openDetailsModal('users', 'Total Platform Users')">
                     <div class="card-header">
                         <span class="card-title">Total Users</span>
                         <div class="card-icon icon-users">👥</div>
@@ -46,7 +46,7 @@
                     </div>
                 </div>
 
-                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #10b981, #34d399);">
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #10b981, #34d399); cursor: pointer;" (click)="openDetailsModal('businesses', 'Registered Businesses')">
                     <div class="card-header">
                         <span class="card-title">Active Businesses</span>
                         <div class="card-icon icon-biz">🏢</div>
@@ -57,7 +57,7 @@
                     </div>
                 </div>
 
-                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #ec4899, #f472b6);">
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #ec4899, #f472b6); cursor: pointer;" (click)="openDetailsModal('swaps', 'Completed Swap Transactions')">
                     <div class="card-header">
                         <span class="card-title">Completed Swaps</span>
                         <div class="card-icon icon-swap">🔄</div>
@@ -68,7 +68,7 @@
                     </div>
                 </div>
 
-                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #8b5cf6, #a78bfa);">
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #8b5cf6, #a78bfa); cursor: pointer;" (click)="openDetailsModal('queue', 'Customers Served in Queue')">
                     <div class="card-header">
                         <span class="card-title">Customers Served</span>
                         <div class="card-icon icon-queue">✅</div>
@@ -188,4 +188,169 @@
             </div>
         </div>
     </section>
+
+    <!-- Glassmorphism Detailed Modal Overlay -->
+    <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon" [ngSwitch]="modalType">
+                        <ng-container *ngSwitchCase="'users'">👥</ng-container>
+                        <ng-container *ngSwitchCase="'businesses'">🏢</ng-container>
+                        <ng-container *ngSwitchCase="'swaps'">🔄</ng-container>
+                        <ng-container *ngSwitchCase="'queue'">✅</ng-container>
+                    </span>
+                    <h2 class="modal-title">{{ modalTitle }}</h2>
+                </div>
+                <button class="btn-close" (click)="closeModal()">✕</button>
+            </div>
+
+            <!-- Modal Loading State -->
+            <div *ngIf="loadingDetails" class="loading-container" style="padding: 4rem 0;">
+                <div class="loading-spinner large"></div>
+                <p class="text-secondary mt-3">Fetching detailed {{ modalType }} data...</p>
+            </div>
+
+            <!-- Modal Table Data -->
+            <div class="table-container modal-table" *ngIf="!loadingDetails && modalData.length > 0">
+                <table class="modern-table">
+                    
+                    <!-- DYNAMIC HEADERS -->
+                    <thead>
+                        <tr *ngIf="modalType === 'users'">
+                            <th>User Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                        <tr *ngIf="modalType === 'businesses'">
+                            <th>Business Name</th>
+                            <th>Type & Location</th>
+                            <th>Contact</th>
+                            <th>Owner</th>
+                            <th>Status</th>
+                        </tr>
+                        <tr *ngIf="modalType === 'swaps'">
+                            <th>Swap Details</th>
+                            <th>Requester</th>
+                            <th>Target User</th>
+                            <th>Target Token</th>
+                            <th>Status</th>
+                        </tr>
+                        <tr *ngIf="modalType === 'queue'">
+                            <th>Token No.</th>
+                            <th>Customer</th>
+                            <th>Business</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <!-- DYNAMIC BODY -->
+                    <tbody>
+                        <!-- USERS TABLE -->
+                        <ng-container *ngIf="modalType === 'users'">
+                            <tr *ngFor="let item of modalData">
+                                <td>
+                                    <div class="biz-name-cell">
+                                        <div class="biz-avatar" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                                            {{ item.name.charAt(0).toUpperCase() }}
+                                        </div>
+                                        <span class="biz-name">{{ item.name }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ item.email }}</td>
+                                <td>
+                                    <span class="stat-badge" [ngClass]="{'high': item.role === 'admin', 'medium': item.role === 'owner', 'low': item.role === 'user'}">
+                                        {{ item.role | uppercase }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="stat-badge" [ngClass]="item.isVerified ? 'high' : 'low'">
+                                        {{ item.isVerified ? 'Verified' : 'Pending' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </ng-container>
+
+                        <!-- BUSINESSES TABLE -->
+                        <ng-container *ngIf="modalType === 'businesses'">
+                            <tr *ngFor="let item of modalData">
+                                <td>
+                                    <div class="biz-name-cell">
+                                        <div class="biz-avatar" style="width: 32px; height: 32px; font-size: 0.9rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                            {{ item.name.charAt(0).toUpperCase() }}
+                                        </div>
+                                        <span class="biz-name">{{ item.name }}</span>
+                                    </div>
+                                </td>
+                                <td><span class="biz-category">{{ item.category }} • {{ item.location }}</span></td>
+                                <td>{{ item.mobile }}</td>
+                                <td>{{ item.userId?.name }}<br><small style="color: #9ca3af">{{ item.userId?.email }}</small></td>
+                                <td>
+                                    <span class="stat-badge" [ngClass]="item.status === 'Approved' ? 'high' : 'low'">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </ng-container>
+
+                        <!-- SWAPS TABLE -->
+                        <ng-container *ngIf="modalType === 'swaps'">
+                            <tr *ngFor="let item of modalData">
+                                <td>
+                                    <div class="biz-name-cell">
+                                        <div class="biz-avatar" style="width: 32px; height: 32px; font-size: 0.9rem; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
+                                            🔄
+                                        </div>
+                                        <div>
+                                            <span class="biz-name">Business: {{ item.businessId?.name || 'Multi-queue' }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ item.requesterId?.name }}<br><small style="color: #9ca3af">Token: {{ item.requesterTokenNumber }}</small></td>
+                                <td>{{ item.targetUserId?.name }}</td>
+                                <td>Token {{ item.targetTokenNumber }}</td>
+                                <td>
+                                    <span class="stat-badge" [ngClass]="{'high': item.status === 'Accepted', 'low': item.status === 'Pending', 'medium': item.status === 'Rejected'}">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </ng-container>
+
+                        <!-- QUEUE / SERVED TABLE -->
+                        <ng-container *ngIf="modalType === 'queue'">
+                            <tr *ngFor="let item of modalData">
+                                <td>
+                                    <div class="biz-name-cell">
+                                        <div class="biz-avatar" style="width: 32px; height: 32px; font-size: 0.9rem; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">
+                                            #{{ item.tokenNumber }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ item.userId?.name }}<br><small style="color: #9ca3af">{{ item.userId?.email }}</small></td>
+                                <td>{{ item.businessId?.name }}</td>
+                                <td>
+                                    <span class="stat-badge high">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </ng-container>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty Modal State -->
+            <div *ngIf="!loadingDetails && modalData.length === 0" class="empty-state" style="padding: 3rem 1rem;">
+                <div class="empty-icon">📭</div>
+                <h3>No Data Available</h3>
+                <p class="text-secondary">We couldn't find any detailed entries for this category yet.</p>
+            </div>
+
+        </div>
+    </div>
 </div>

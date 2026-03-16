@@ -65,3 +65,43 @@ exports.getAnalytics = async (req, res) => {
         res.status(500).json({ message: 'Error fetching analytics', error: error.message });
     }
 };
+
+exports.getDetailedStats = async (req, res) => {
+    try {
+        const { type } = req.params;
+        let data = [];
+
+        switch (type) {
+            case 'users':
+                // Fetch all users and owners
+                data = await User.find({}, '-password').sort({ createdAt: -1 });
+                break;
+            case 'businesses':
+                // Fetch all businesses
+                data = await Business.find().populate('userId', 'name email').sort({ createdAt: -1 });
+                break;
+            case 'swaps':
+                // Fetch all swaps
+                data = await SwapRequest.find()
+                    .populate('requesterId', 'name email')
+                    .populate('targetUserId', 'name email')
+                    .populate('businessId', 'name')
+                    .sort({ createdAt: -1 });
+                break;
+            case 'queue':
+                // Fetch all queue entries (Served)
+                data = await QueueEntry.find()
+                    .populate('userId', 'name email')
+                    .populate('businessId', 'name')
+                    .sort({ createdAt: -1 });
+                break;
+            default:
+                return res.status(400).json({ message: 'Invalid stats type requested' });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error(`[ERROR] fetching detailed stats for ${req.params?.type}`, error);
+        res.status(500).json({ message: 'Error fetching detailed stats', error: error.message });
+    }
+};

@@ -71,6 +71,43 @@ export class AdminComponent implements OnInit {
         });
     }
 
+    // Modal State
+    showModal = false;
+    modalTitle = '';
+    modalType: 'users' | 'businesses' | 'swaps' | 'queue' = 'users';
+    modalData: any[] = [];
+    loadingDetails = false;
+
+    openDetailsModal(type: 'users' | 'businesses' | 'swaps' | 'queue', title: string) {
+        this.modalType = type;
+        this.modalTitle = title;
+        this.showModal = true;
+        this.loadingDetails = true;
+        this.modalData = [];
+        this.cdr.detectChanges();
+
+        this.adminService.getDetails(type).subscribe({
+            next: (data) => {
+                this.modalData = data || [];
+                this.loadingDetails = false;
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error(`Error fetching detailed stats for ${type}:`, err);
+                this.loadingDetails = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    closeModal() {
+        this.showModal = false;
+        setTimeout(() => {
+            this.modalData = [];
+        }, 300); // Wait for fade out animation
+        this.cdr.detectChanges();
+    }
+
     updateStatus(id: string, status: string) {
         if (!confirm(`Are you sure you want to ${status.toLowerCase()} this business?`)) return;
 
