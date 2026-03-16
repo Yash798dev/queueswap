@@ -28,7 +28,7 @@ export class App implements OnInit {
   protected backendMessage = signal<string>('Checking connection...');
 
   ngOnInit() {
-    this.http.get<{ message: string }>('https://queueswap-backend.onrender.com/api/health').subscribe({
+    this.http.get<{ message: string }>('https://queueswap-production.up.railway.app/api/health').subscribe({
       next: (response) => {
         this.backendMessage.set(response.message);
       },

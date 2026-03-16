@@ -105,7 +105,7 @@ export class QueueTokenComponent implements OnInit, OnDestroy {
     }
 
     private getApiBase(): string {
-        return 'https://queueswap-backend.onrender.com/api/business';
+        return 'https://queueswap-production.up.railway.app/api/business';
     }
 
     onSubmit() {

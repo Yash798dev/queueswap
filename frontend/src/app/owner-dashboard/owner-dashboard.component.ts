@@ -32,7 +32,7 @@ export class OwnerDashboardComponent implements OnInit {
     }
 
     loadBusinessInfo() {
-        const apiUrl = `https://queueswap-backend.onrender.com/api/business/pending`;
+        const apiUrl = `https://queueswap-production.up.railway.app/api/business/pending`;
 
         this.http.get<any[]>(apiUrl).subscribe({
             next: (businesses) => {
