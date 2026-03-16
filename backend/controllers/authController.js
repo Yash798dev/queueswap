@@ -39,19 +39,20 @@ exports.register = async (req, res) => {
 exports.verify = async (req, res) => {
     try {
         const { token } = req.params;
-        const frontendUrl = 'https://queueswap-app.onrender.com';
+        // Hardcode the full URL to ensure no trailing slash issues
+        const loginUrl = 'https://queueswap-app.onrender.com/login';
 
         const user = await User.findOne({ verificationToken: token });
         if (!user) {
-            return res.redirect(`${frontendUrl}/login?verified=false&error=invalid_token`);
+            return res.redirect(`${loginUrl}?verified=false&error=invalid_token`);
         }
 
         user.isVerified = true;
         user.verificationToken = undefined; // Clear token
         await user.save();
 
-        // Redirect to frontend login page with success indicator
-        res.redirect(`${frontendUrl}/login?verified=true`);
+        // Redirect directly to the login route with success query param
+        res.redirect(`${loginUrl}?verified=true`);
     } catch (error) {
         console.error('Verification error:', error);
         res.redirect('https://queueswap-app.onrender.com/login?verified=false&error=server_error');
