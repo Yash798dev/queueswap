@@ -56,6 +56,7 @@ app.get('/api/admin/details/:type', adminController.getDetailedStats);
 // Business Routes
 app.post('/api/business/submit', businessController.submitBusiness);
 app.get('/api/business/pending', businessController.getPendingBusinesses);
+app.get('/api/business/owner/:userId', businessController.getBusinessByOwner);
 app.put('/api/business/:id/status', businessController.updateStatus);
 app.get('/api/business/:id/analytics', businessController.getBusinessAnalytics);
 app.post('/api/business/:id/join', businessController.joinQueue);

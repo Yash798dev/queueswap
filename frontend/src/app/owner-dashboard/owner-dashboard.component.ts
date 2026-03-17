@@ -71,16 +71,23 @@ export class OwnerDashboardComponent implements OnInit {
     }
 
     loadBusinessInfo() {
-        const apiUrl = `https://queueswap-backend.onrender.com/api/business/pending`;
+        const userId = this.user._id || this.user.id;
+        
+        if (!userId) {
+            this.isLoading = false;
+            return;
+        }
 
-        this.http.get<any[]>(apiUrl).subscribe({
-            next: (businesses) => {
-                this.business = businesses.find(b =>
-                    (b.userId === this.user._id || b.userId === this.user.id) && b.status === 'Approved'
-                );
-                
-                if (this.business) {
+        this.businessService.getByOwner(userId).subscribe({
+            next: (business) => {
+                if (business && business.status === 'Approved') {
+                    this.business = business;
                     this.loadAnalytics();
+                } else if (business && business.status === 'Pending') {
+                    // Registration exists but is pending
+                    this.business = null; // UI treats null business as pending/unregistered for now
+                    this.isLoading = false;
+                    this.cd.detectChanges();
                 } else {
                     this.isLoading = false;
                     this.cd.detectChanges();

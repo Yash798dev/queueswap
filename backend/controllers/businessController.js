@@ -37,6 +37,20 @@ exports.getPendingBusinesses = async (req, res) => {
     }
 };
 
+exports.getBusinessByOwner = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const business = await Business.findOne({ userId });
+        if (!business) {
+            return res.status(404).json({ message: 'Business not found' });
+        }
+        res.json(business);
+    } catch (error) {
+        console.error('[ERROR] Error fetching business by owner:', error);
+        res.status(500).json({ message: 'Error fetching business', error: error.message });
+    }
+};
+
 
 exports.updateStatus = async (req, res) => {
     try {
