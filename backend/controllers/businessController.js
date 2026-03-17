@@ -252,8 +252,6 @@ exports.getBusinessAnalytics = async (req, res) => {
 
         // Fetch recent completed swaps
         const recentSwaps = await SwapRequest.find({ businessId: id, status: 'Accepted' })
-            .populate('requesterId', 'name')
-            .populate('targetUserId', 'name')
             .sort({ updatedAt: -1 })
             .limit(20)
             .lean();
