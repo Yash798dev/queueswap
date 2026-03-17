@@ -551,3 +551,281 @@ h3 { font-size: 1.3rem; color: #1f2937; margin: 0 0 20px 0; font-weight: 800; di
     from { opacity: 0; transform: translateX(30px) scale(0.95); }
     to   { opacity: 1; transform: translateX(0) scale(1); }
 }
+
+/* ==================== FAST SERVICE MARKETPLACE ==================== */
+
+.fast-service-section { margin-top: 0.5rem; }
+
+.fast-service-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    color: #fff;
+    text-align: left;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); }
+    50% { box-shadow: 0 8px 40px rgba(239, 68, 68, 0.6); }
+}
+
+.fast-service-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(245, 158, 11, 0.5);
+}
+
+.fast-service-btn .fast-icon { font-size: 2rem; }
+.fast-service-btn strong { display: block; font-size: 1.1rem; margin-bottom: 0.15rem; }
+.fast-service-btn small { display: block; font-size: 0.85rem; opacity: 0.9; }
+
+/* My Fast Request Panel */
+.my-fast-request-panel {
+    background: rgba(245, 158, 11, 0.05);
+    border: 2px solid rgba(245, 158, 11, 0.3);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-top: 0.5rem;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.panel-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.panel-title h3 { margin: 0; font-size: 1rem; color: #333; }
+
+.cancel-btn-small {
+    background: #fee2e2;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+.cancel-btn-small:hover { background: #ef4444; color: #fff; }
+
+.waiting-offers {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6b7280;
+}
+
+.waiting-anim {
+    font-size: 2.5rem;
+    animation: bounce 1.5s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Offers Grid */
+.offers-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.offer-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.offer-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.offer-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.offer-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #dbeafe, #ede9fe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.offer-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.offer-name { font-weight: 700; color: #1f2937; font-size: 1rem; }
+.offer-token { color: #6b7280; font-size: 0.85rem; }
+
+.offer-price-tag {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.2rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.offer-actions { display: flex; gap: 0.5rem; }
+
+.accept-offer-btn {
+    flex: 1;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.accept-offer-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Marketplace Section (Other people's requests) */
+.marketplace-section { margin-top: 0.5rem; }
+
+.marketplace-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+.marketplace-header h3 { margin: 0; font-size: 1.1rem; color: #1f2937; }
+
+.marketplace-card {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.marketplace-card:hover {
+    border-color: #f59e0b;
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);
+}
+
+.marketplace-card-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.marketplace-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.marketplace-details { display: flex; flex-direction: column; }
+.marketplace-name { font-weight: 700; color: #1f2937; font-size: 1rem; }
+.marketplace-token { color: #6b7280; font-size: 0.85rem; }
+.marketplace-offers-count { color: #f59e0b; font-size: 0.8rem; font-weight: 600; }
+
+.marketplace-offer-form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: stretch;
+}
+
+.marketplace-offer-form .price-input-group {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.3s ease;
+}
+
+.marketplace-offer-form .price-input-group:focus-within {
+    border-color: #f59e0b;
+}
+
+.currency-symbol {
+    padding: 0 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    font-size: 1.1rem;
+}
+
+.marketplace-price-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0.75rem 0.5rem;
+    font-size: 1rem;
+    background: transparent;
+    color: #1f2937;
+    -moz-appearance: textfield;
+}
+.marketplace-price-input::-webkit-inner-spin-button,
+.marketplace-price-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.make-offer-btn {
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+.make-offer-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+}
+.make-offer-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}

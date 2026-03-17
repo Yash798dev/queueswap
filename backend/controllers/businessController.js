@@ -2,6 +2,7 @@ const Business = require('../models/Business');
 const User = require('../models/User');
 const QueueEntry = require('../models/QueueEntry');
 const SwapRequest = require('../models/SwapRequest');
+const FastServiceRequest = require('../models/FastServiceRequest');
 const emailService = require('../services/emailService');
 const qrService = require('../services/qrService');
 const crypto = require('crypto');
@@ -630,3 +631,208 @@ exports.getBlockchainPendingSwaps = async (req, res) => {
         res.status(500).json({ message: 'Error fetching blockchain pending swaps', error: error.message });
     }
 };
+
+// ==================== FAST SERVICE MARKETPLACE ====================
+
+// 1. Create a Fast Service Request (user wants to be served faster)
+exports.createFastServiceRequest = async (req, res) => {
+    try {
+        const { id } = req.params; // businessId
+        const { uniqueId } = req.body;
+
+        if (!uniqueId) return res.status(400).json({ message: 'uniqueId is required' });
+
+        // Verify user is in the queue
+        const queueEntry = await QueueEntry.findOne({ businessId: id, uniqueId, status: 'Waiting' });
+        if (!queueEntry) return res.status(404).json({ message: 'You are not in this queue' });
+
+        // Cancel any prior open requests from this user
+        await FastServiceRequest.updateMany(
+            { businessId: id, requesterUniqueId: uniqueId, status: 'Open' },
+            { status: 'Cancelled' }
+        );
+
+        const request = new FastServiceRequest({
+            businessId: id,
+            requesterUniqueId: uniqueId,
+            requesterName: queueEntry.userName,
+            requesterTokenNumber: queueEntry.tokenNumber
+        });
+
+        await request.save();
+        console.log(`[FAST-SERVICE] Request created by ${queueEntry.userName} (Token #${queueEntry.tokenNumber})`);
+
+        res.json({
+            message: 'Fast service request created!',
+            requestId: request._id,
+            requesterName: queueEntry.userName,
+            requesterTokenNumber: queueEntry.tokenNumber
+        });
+    } catch (error) {
+        console.error('[ERROR] Fast service request:', error);
+        res.status(500).json({ message: 'Error creating fast service request', error: error.message });
+    }
+};
+
+// 2. Submit an offer to a Fast Service Request
+exports.submitFastServiceOffer = async (req, res) => {
+    try {
+        const { id } = req.params; // businessId
+        const { requestId, uniqueId, demandedPrice } = req.body;
+
+        if (!requestId || !uniqueId || demandedPrice === undefined) {
+            return res.status(400).json({ message: 'requestId, uniqueId, and demandedPrice are required' });
+        }
+
+        // Verify offerer is in the queue
+        const queueEntry = await QueueEntry.findOne({ businessId: id, uniqueId, status: 'Waiting' });
+        if (!queueEntry) return res.status(404).json({ message: 'You are not in this queue' });
+
+        // Find the request
+        const request = await FastServiceRequest.findById(requestId);
+        if (!request || request.status !== 'Open') {
+            return res.status(404).json({ message: 'Request not found or already closed' });
+        }
+
+        // Prevent self-offer
+        if (request.requesterUniqueId === uniqueId) {
+            return res.status(400).json({ message: 'You cannot offer on your own request' });
+        }
+
+        // Check if already offered
+        const existingOffer = request.offers.find(o => o.offererUniqueId === uniqueId && o.status === 'Pending');
+        if (existingOffer) {
+            return res.status(400).json({ message: 'You have already made an offer on this request' });
+        }
+
+        request.offers.push({
+            offererUniqueId: uniqueId,
+            offererName: queueEntry.userName,
+            offererTokenNumber: queueEntry.tokenNumber,
+            demandedPrice: Number(demandedPrice)
+        });
+
+        await request.save();
+        console.log(`[FAST-SERVICE] Offer from ${queueEntry.userName} (Token #${queueEntry.tokenNumber}) at ₹${demandedPrice}`);
+
+        res.json({
+            message: 'Offer submitted successfully!',
+            offer: {
+                offererName: queueEntry.userName,
+                offererTokenNumber: queueEntry.tokenNumber,
+                demandedPrice: Number(demandedPrice)
+            }
+        });
+    } catch (error) {
+        console.error('[ERROR] Submit offer:', error);
+        res.status(500).json({ message: 'Error submitting offer', error: error.message });
+    }
+};
+
+// 3. Get open Fast Service Requests for a business
+exports.getOpenFastServiceRequests = async (req, res) => {
+    try {
+        const { id } = req.params; // businessId
+        const excludeUniqueId = req.query.excludeUniqueId || '';
+
+        const requests = await FastServiceRequest.find({
+            businessId: id,
+            status: 'Open'
+        }).sort({ createdAt: -1 });
+
+        res.json({
+            requests: requests.map(r => ({
+                requestId: r._id,
+                requesterName: r.requesterName,
+                requesterTokenNumber: r.requesterTokenNumber,
+                requesterUniqueId: r.requesterUniqueId,
+                isOwn: r.requesterUniqueId === excludeUniqueId,
+                offers: r.requesterUniqueId === excludeUniqueId ? r.offers : [],
+                offerCount: r.offers.filter(o => o.status === 'Pending').length,
+                createdAt: r.createdAt
+            }))
+        });
+    } catch (error) {
+        console.error('[ERROR] Get open requests:', error);
+        res.status(500).json({ message: 'Error fetching requests', error: error.message });
+    }
+};
+
+// 4. Accept an offer (requester picks the best deal)
+exports.acceptFastServiceOffer = async (req, res) => {
+    try {
+        const { id } = req.params; // businessId
+        const { requestId, offerId } = req.body;
+
+        if (!requestId || !offerId) {
+            return res.status(400).json({ message: 'requestId and offerId are required' });
+        }
+
+        const request = await FastServiceRequest.findById(requestId);
+        if (!request || request.status !== 'Open') {
+            return res.status(404).json({ message: 'Request not found or already closed' });
+        }
+
+        const offer = request.offers.id(offerId);
+        if (!offer || offer.status !== 'Pending') {
+            return res.status(404).json({ message: 'Offer not found or already processed' });
+        }
+
+        // Find both queue entries
+        const requesterEntry = await QueueEntry.findOne({
+            businessId: id,
+            uniqueId: request.requesterUniqueId,
+            status: 'Waiting'
+        });
+
+        const offererEntry = await QueueEntry.findOne({
+            businessId: id,
+            uniqueId: offer.offererUniqueId,
+            status: 'Waiting'
+        });
+
+        if (!requesterEntry || !offererEntry) {
+            return res.status(400).json({ message: 'One or both users are no longer in the queue' });
+        }
+
+        // Swap token numbers
+        const tempToken = requesterEntry.tokenNumber;
+        requesterEntry.tokenNumber = offererEntry.tokenNumber;
+        offererEntry.tokenNumber = tempToken;
+
+        await requesterEntry.save();
+        await offererEntry.save();
+
+        // Update offer and request status
+        offer.status = 'Accepted';
+        // Decline all other pending offers
+        request.offers.forEach(o => {
+            if (o._id.toString() !== offerId && o.status === 'Pending') {
+                o.status = 'Declined';
+            }
+        });
+        request.status = 'Completed';
+        await request.save();
+
+        console.log(`[FAST-SERVICE] Swap completed! ${request.requesterName} (#${requesterEntry.tokenNumber}) <-> ${offer.offererName} (#${offererEntry.tokenNumber}) for ₹${offer.demandedPrice}`);
+
+        res.json({
+            message: 'Offer accepted! Positions swapped successfully.',
+            requester: {
+                uniqueId: requesterEntry.uniqueId,
+                newTokenNumber: requesterEntry.tokenNumber,
+                name: requesterEntry.userName
+            },
+            offerer: {
+                uniqueId: offererEntry.uniqueId,
+                newTokenNumber: offererEntry.tokenNumber,
+                name: offererEntry.userName
+            },
+            price: offer.demandedPrice
+        });
+    } catch (error) {
+        console.error('[ERROR] Accept offer:', error);
+        res.status(500).json({ message: 'Error accepting offer', error: error.message });
+    }
+};
+

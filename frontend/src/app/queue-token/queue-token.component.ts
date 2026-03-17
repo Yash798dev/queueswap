@@ -486,6 +486,9 @@ export class QueueTokenComponent implements OnInit, OnDestroy {
         this.swapPollInterval = setInterval(() => {
             this.pollIncomingSwaps();
         }, 5000);
+
+        // Also start fast service polling
+        this.startFastServicePolling();
     }
 
     private pollIncomingSwaps() {
@@ -592,9 +595,172 @@ export class QueueTokenComponent implements OnInit, OnDestroy {
             this.swapPollInterval = null;
         }
         this.stopSwapStatusPolling();
+        this.stopFastServicePolling();
         if (this.queuePollInterval) {
             clearInterval(this.queuePollInterval);
             this.queuePollInterval = null;
+        }
+    }
+
+    // ==================== FAST SERVICE MARKETPLACE ====================
+
+    fastServiceRequested: boolean = false;
+    myFastServiceId: string | null = null;
+    fastServiceRequests: any[] = [];
+    myOffers: any[] = [];
+    offerPrice: string = '';
+    offerSubmitting: boolean = false;
+    fastServiceMessage: string | null = null;
+    fastServiceMessageType: 'success' | 'error' | 'info' = 'info';
+    private fastServicePollInterval: any = null;
+
+    requestFastService() {
+        if (!this.businessId || !this.uniqueId) return;
+
+        this.http.post<any>(`${this.getApiBase()}/${this.businessId}/fast-service/request`, {
+            uniqueId: this.uniqueId
+        }).pipe(timeout(10000)).subscribe({
+            next: (response) => {
+                this.fastServiceRequested = true;
+                this.myFastServiceId = response.requestId;
+                this.myOffers = [];
+                this.fastServiceMessage = '⚡ Your fast service request is live! Waiting for offers...';
+                this.fastServiceMessageType = 'info';
+                this.startFastServicePolling();
+                this.cd.detectChanges();
+            },
+            error: (err) => {
+                this.fastServiceMessage = err.error?.message || 'Failed to create fast service request.';
+                this.fastServiceMessageType = 'error';
+                this.cd.detectChanges();
+            }
+        });
+    }
+
+    cancelFastService() {
+        this.fastServiceRequested = false;
+        this.myFastServiceId = null;
+        this.myOffers = [];
+        this.fastServiceMessage = null;
+        this.cd.detectChanges();
+    }
+
+    submitOffer(request: any) {
+        if (!this.businessId || !this.uniqueId || !this.offerPrice) return;
+
+        const price = parseFloat(this.offerPrice);
+        if (isNaN(price) || price <= 0) {
+            this.fastServiceMessage = 'Please enter a valid price.';
+            this.fastServiceMessageType = 'error';
+            this.cd.detectChanges();
+            return;
+        }
+
+        this.offerSubmitting = true;
+        this.cd.detectChanges();
+
+        this.http.post<any>(`${this.getApiBase()}/${this.businessId}/fast-service/offer`, {
+            requestId: request.requestId,
+            uniqueId: this.uniqueId,
+            demandedPrice: price
+        }).pipe(timeout(10000)).subscribe({
+            next: (response) => {
+                this.offerSubmitting = false;
+                this.offerPrice = '';
+                this.fastServiceMessage = `✅ Offer of ₹${price} submitted!`;
+                this.fastServiceMessageType = 'success';
+                this.cd.detectChanges();
+
+                setTimeout(() => {
+                    this.fastServiceMessage = null;
+                    this.cd.detectChanges();
+                }, 3000);
+            },
+            error: (err) => {
+                this.offerSubmitting = false;
+                this.fastServiceMessage = err.error?.message || 'Failed to submit offer.';
+                this.fastServiceMessageType = 'error';
+                this.cd.detectChanges();
+            }
+        });
+    }
+
+    acceptFastServiceOffer(offer: any) {
+        if (!this.businessId || !this.myFastServiceId) return;
+
+        this.http.post<any>(`${this.getApiBase()}/${this.businessId}/fast-service/accept`, {
+            requestId: this.myFastServiceId,
+            offerId: offer._id
+        }).pipe(timeout(10000)).subscribe({
+            next: (response) => {
+                // Update local token
+                const myData = response.requester.uniqueId === this.uniqueId
+                    ? response.requester
+                    : response.offerer;
+                this.token = myData.newTokenNumber;
+
+                this.fastServiceRequested = false;
+                this.myFastServiceId = null;
+                this.myOffers = [];
+                this.fastServiceMessage = `🎉 Position swapped! Your new token is #${this.token} (paid ₹${response.price})`;
+                this.fastServiceMessageType = 'success';
+
+                if (this.businessId) {
+                    this.loadQueueDetails(this.businessId);
+                }
+                this.cd.detectChanges();
+
+                setTimeout(() => {
+                    this.fastServiceMessage = null;
+                    this.cd.detectChanges();
+                }, 5000);
+            },
+            error: (err) => {
+                this.fastServiceMessage = err.error?.message || 'Failed to accept offer.';
+                this.fastServiceMessageType = 'error';
+                this.cd.detectChanges();
+            }
+        });
+    }
+
+    private startFastServicePolling() {
+        if (this.fastServicePollInterval) return;
+        this.pollFastService();
+        this.fastServicePollInterval = setInterval(() => {
+            this.pollFastService();
+        }, 4000);
+    }
+
+    private pollFastService() {
+        if (!this.businessId || !this.uniqueId) return;
+
+        const url = `${this.getApiBase()}/${this.businessId}/fast-service/open?excludeUniqueId=${this.uniqueId}`;
+
+        this.http.get<any>(url).pipe(timeout(10000)).subscribe({
+            next: (response) => {
+                const allRequests = response.requests || [];
+
+                // My own request — get the offers
+                const myReq = allRequests.find((r: any) => r.isOwn);
+                if (myReq) {
+                    this.myOffers = (myReq.offers || []).filter((o: any) => o.status === 'Pending');
+                    this.myFastServiceId = myReq.requestId;
+                    this.fastServiceRequested = true;
+                }
+
+                // Other people's requests (for me to make offers on)
+                this.fastServiceRequests = allRequests.filter((r: any) => !r.isOwn);
+
+                this.cd.detectChanges();
+            },
+            error: () => {}
+        });
+    }
+
+    private stopFastServicePolling() {
+        if (this.fastServicePollInterval) {
+            clearInterval(this.fastServicePollInterval);
+            this.fastServicePollInterval = null;
         }
     }
 }

@@ -195,6 +195,97 @@
           <p>You are the first one! 🎉</p>
         </div>
       </div>
+
+      <!-- ==================== FAST SERVICE MARKETPLACE ==================== -->
+      <div class="fast-service-section">
+        <div class="divider"></div>
+
+        <!-- Fast Service Message -->
+        <div *ngIf="fastServiceMessage" class="swap-message" [ngClass]="{
+          'swap-success': fastServiceMessageType === 'success',
+          'swap-error': fastServiceMessageType === 'error',
+          'swap-info': fastServiceMessageType === 'info'
+        }">
+          <span>{{ fastServiceMessage }}</span>
+        </div>
+
+        <!-- Request Fast Service Button -->
+        <button *ngIf="!fastServiceRequested" class="fast-service-btn" (click)="requestFastService()">
+          <span class="fast-icon">⚡</span>
+          <div>
+            <strong>Request Fast Service</strong>
+            <small>Let others offer you their position for a fee</small>
+          </div>
+        </button>
+
+        <!-- MY REQUEST — Incoming Offers Panel -->
+        <div *ngIf="fastServiceRequested" class="my-fast-request-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="pulse-dot"></span>
+              <h3>⚡ Your Fast Service Request is Live</h3>
+            </div>
+            <button class="cancel-btn-small" (click)="cancelFastService()">✖ Cancel</button>
+          </div>
+
+          <div *ngIf="myOffers.length === 0" class="waiting-offers">
+            <div class="waiting-anim">⏳</div>
+            <p>Waiting for queue members to offer their positions...</p>
+          </div>
+
+          <div *ngIf="myOffers.length > 0" class="offers-grid">
+            <div *ngFor="let offer of myOffers" class="offer-card slide-in">
+              <div class="offer-header">
+                <div class="offer-avatar">👤</div>
+                <div class="offer-info">
+                  <span class="offer-name">{{ offer.offererName }}</span>
+                  <span class="offer-token">Token #{{ offer.offererTokenNumber }}</span>
+                </div>
+                <div class="offer-price-tag">
+                  ₹{{ offer.demandedPrice }}
+                </div>
+              </div>
+              <div class="offer-actions">
+                <button class="accept-offer-btn" (click)="acceptFastServiceOffer(offer)">
+                  ✅ Accept for ₹{{ offer.demandedPrice }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OTHER PEOPLE'S REQUESTS — Make an Offer -->
+        <div *ngIf="fastServiceRequests.length > 0 && !fastServiceRequested" class="marketplace-section">
+          <div class="marketplace-header">
+            <span class="pulse-dot"></span>
+            <h3>🏪 Fast Service Marketplace</h3>
+          </div>
+
+          <div *ngFor="let req of fastServiceRequests" class="marketplace-card slide-in">
+            <div class="marketplace-card-info">
+              <div class="marketplace-avatar">⚡</div>
+              <div class="marketplace-details">
+                <span class="marketplace-name">{{ req.requesterName }}</span>
+                <span class="marketplace-token">Token #{{ req.requesterTokenNumber }} wants faster service</span>
+                <span class="marketplace-offers-count">{{ req.offerCount }} offer{{ req.offerCount !== 1 ? 's' : '' }} so far</span>
+              </div>
+            </div>
+            <div class="marketplace-offer-form">
+              <div class="price-input-group">
+                <span class="currency-symbol">₹</span>
+                <input type="number" [(ngModel)]="offerPrice" min="1" placeholder="Your price"
+                  class="marketplace-price-input" />
+              </div>
+              <button class="make-offer-btn" [disabled]="offerSubmitting || !offerPrice" (click)="submitOffer(req)">
+                <span *ngIf="!offerSubmitting">💰 Make Offer</span>
+                <span *ngIf="offerSubmitting" class="btn-loading">
+                  <span class="loading-spinner"></span> Submitting...
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     </ng-container>
   </div>

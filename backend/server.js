@@ -76,6 +76,12 @@ app.post('/api/business/wallet/connect', businessController.connectWallet);
 app.post('/api/business/:id/swap/blockchain', businessController.createBlockchainSwap);
 app.get('/api/business/:id/swap/blockchain/pending', businessController.getBlockchainPendingSwaps);
 
+// Fast Service Marketplace Routes
+app.post('/api/business/:id/fast-service/request', businessController.createFastServiceRequest);
+app.post('/api/business/:id/fast-service/offer', businessController.submitFastServiceOffer);
+app.get('/api/business/:id/fast-service/open', businessController.getOpenFastServiceRequests);
+app.post('/api/business/:id/fast-service/accept', businessController.acceptFastServiceOffer);
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });
 });
