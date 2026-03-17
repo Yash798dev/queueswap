@@ -13,12 +13,16 @@ import { AuthService } from '../services/auth.service';
     styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
-    activeTab: 'approvals' | 'analytics' = 'analytics';
+    activeTab: 'approvals' | 'analytics' | 'revenue' = 'analytics';
     pendingBusinesses: any[] = [];
     analyticsData: AdminAnalytics | null = null;
     
     loadingApprovals = true;
     loadingAnalytics = true;
+
+    // Revenue state
+    revenueData: any = null;
+    loadingRevenue = false;
 
     constructor(
         private businessService: BusinessService,
@@ -33,8 +37,11 @@ export class AdminComponent implements OnInit {
         this.loadPendingBusinesses();
     }
 
-    setTab(tab: 'approvals' | 'analytics') {
+    setTab(tab: 'approvals' | 'analytics' | 'revenue') {
         this.activeTab = tab;
+        if (tab === 'revenue' && !this.revenueData) {
+            this.loadRevenue();
+        }
         this.cdr.detectChanges();
     }
 
@@ -49,6 +56,22 @@ export class AdminComponent implements OnInit {
             error: (err) => {
                 console.error('Error fetching analytics:', err);
                 this.loadingAnalytics = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    loadRevenue() {
+        this.loadingRevenue = true;
+        this.adminService.getRevenue().subscribe({
+            next: (data) => {
+                this.revenueData = data;
+                this.loadingRevenue = false;
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error('Error fetching revenue:', err);
+                this.loadingRevenue = false;
                 this.cdr.detectChanges();
             }
         });

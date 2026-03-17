@@ -3,6 +3,7 @@ const User = require('../models/User');
 const QueueEntry = require('../models/QueueEntry');
 const SwapRequest = require('../models/SwapRequest');
 const FastServiceRequest = require('../models/FastServiceRequest');
+const Transaction = require('../models/Transaction');
 const emailService = require('../services/emailService');
 const qrService = require('../services/qrService');
 const crypto = require('crypto');
@@ -814,6 +815,32 @@ exports.acceptFastServiceOffer = async (req, res) => {
         request.status = 'Completed';
         await request.save();
 
+        // Record the transaction with 5% platform fee
+        const totalAmount = offer.demandedPrice;
+        const platformFee = Math.round(totalAmount * 0.05 * 100) / 100;
+        const receiverAmount = Math.round((totalAmount - platformFee) * 100) / 100;
+
+        const business = await Business.findById(id);
+
+        const transaction = new Transaction({
+            businessId: id,
+            businessName: business ? business.name : 'Unknown',
+            fastServiceRequestId: request._id,
+            payerUniqueId: request.requesterUniqueId,
+            payerName: request.requesterName,
+            payerTokenBefore: tempToken,
+            payerTokenAfter: requesterEntry.tokenNumber,
+            receiverUniqueId: offer.offererUniqueId,
+            receiverName: offer.offererName,
+            receiverTokenBefore: offererEntry.tokenNumber === tempToken ? requesterEntry.tokenNumber : offererEntry.tokenNumber,
+            receiverTokenAfter: offererEntry.tokenNumber,
+            totalAmount,
+            platformFee,
+            receiverAmount
+        });
+        await transaction.save();
+
+        console.log(`[FAST-SERVICE] Transaction recorded: ₹${totalAmount} (Platform: ₹${platformFee}, Receiver: ₹${receiverAmount})`);
         console.log(`[FAST-SERVICE] Swap completed! ${request.requesterName} (#${requesterEntry.tokenNumber}) <-> ${offer.offererName} (#${offererEntry.tokenNumber}) for ₹${offer.demandedPrice}`);
 
         res.json({
@@ -828,7 +855,9 @@ exports.acceptFastServiceOffer = async (req, res) => {
                 newTokenNumber: offererEntry.tokenNumber,
                 name: offererEntry.userName
             },
-            price: offer.demandedPrice
+            price: offer.demandedPrice,
+            platformFee,
+            receiverAmount
         });
     } catch (error) {
         console.error('[ERROR] Accept offer:', error);

@@ -52,6 +52,7 @@ app.get('/api/auth/verify/:token', authController.verify);
 const adminController = require('./controllers/adminController');
 app.get('/api/admin/analytics', adminController.getAnalytics);
 app.get('/api/admin/details/:type', adminController.getDetailedStats);
+app.get('/api/admin/revenue', adminController.getRevenueAnalytics);
 
 // Business Routes
 app.post('/api/business/submit', businessController.submitBusiness);

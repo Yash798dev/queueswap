@@ -18,6 +18,9 @@
         <button class="tab-btn" [class.active]="activeTab === 'analytics'" (click)="setTab('analytics')">
             📊 Analytics Overview
         </button>
+        <button class="tab-btn" [class.active]="activeTab === 'revenue'" (click)="setTab('revenue')">
+            💰 Revenue & Transactions
+        </button>
         <button class="tab-btn" [class.active]="activeTab === 'approvals'" (click)="setTab('approvals')">
             📝 Pending Approvals
             <span class="stat-badge low" *ngIf="pendingBusinesses.length > 0">{{ pendingBusinesses.length }}</span>
@@ -186,6 +189,136 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Revenue & Transactions Tab -->
+    <section class="content-section" *ngIf="activeTab === 'revenue'">
+        
+        <div *ngIf="loadingRevenue" class="loading-container">
+            <div class="loading-spinner large"></div>
+            <p class="text-secondary mt-3">Loading revenue data...</p>
+        </div>
+
+        <ng-container *ngIf="!loadingRevenue && revenueData">
+            <!-- Revenue Summary Cards -->
+            <div class="dashboard-grid">
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #f59e0b, #d97706);">
+                    <div class="card-header">
+                        <span class="card-title">Total Revenue</span>
+                        <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">💰</div>
+                    </div>
+                    <div>
+                        <div class="card-value">₹{{ revenueData.summary.totalRevenue }}</div>
+                        <div class="card-subtext">{{ revenueData.summary.totalTransactions }} transactions</div>
+                    </div>
+                </div>
+
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #10b981, #059669);">
+                    <div class="card-header">
+                        <span class="card-title">Platform Earnings (5%)</span>
+                        <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">🏦</div>
+                    </div>
+                    <div>
+                        <div class="card-value">₹{{ revenueData.summary.totalPlatformEarnings }}</div>
+                        <div class="card-subtext">Admin account balance</div>
+                    </div>
+                </div>
+
+                <div class="analytics-card" style="--card-gradient: linear-gradient(90deg, #3b82f6, #2563eb);">
+                    <div class="card-header">
+                        <span class="card-title">Paid to Users (95%)</span>
+                        <div class="card-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">👥</div>
+                    </div>
+                    <div>
+                        <div class="card-value">₹{{ revenueData.summary.totalPayouts }}</div>
+                        <div class="card-subtext">User earnings from swaps</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business-wise Revenue Breakdown -->
+            <div class="table-container" *ngIf="revenueData.businessBreakdown.length > 0">
+                <div class="table-header">
+                    <h2>🏢 Business Revenue Breakdown</h2>
+                </div>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Business</th>
+                            <th>Transactions</th>
+                            <th>Total Revenue</th>
+                            <th>Platform Fee (5%)</th>
+                            <th>User Payouts (95%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let biz of revenueData.businessBreakdown">
+                            <td>
+                                <div class="biz-name-cell">
+                                    <div class="biz-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                        {{ biz.businessName.charAt(0).toUpperCase() }}
+                                    </div>
+                                    <span class="biz-name">{{ biz.businessName }}</span>
+                                </div>
+                            </td>
+                            <td style="font-weight: 700;">{{ biz.totalTransactions }}</td>
+                            <td style="font-weight: 700; color: #f59e0b;">₹{{ biz.totalRevenue }}</td>
+                            <td style="color: #10b981; font-weight: 600;">₹{{ biz.platformEarnings }}</td>
+                            <td style="color: #3b82f6; font-weight: 600;">₹{{ biz.payouts }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- All Transactions Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h2>📋 All Transaction History</h2>
+                </div>
+                <table class="modern-table" *ngIf="revenueData.transactions.length > 0">
+                    <thead>
+                        <tr>
+                            <th>Business</th>
+                            <th>Payer</th>
+                            <th>Receiver</th>
+                            <th>Total</th>
+                            <th>Platform (5%)</th>
+                            <th>Receiver Gets</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let tx of revenueData.transactions">
+                            <td>
+                                <span class="biz-name">{{ tx.businessName }}</span>
+                            </td>
+                            <td>
+                                {{ tx.payerName }}
+                                <br><small style="color: #9ca3af;">#{{ tx.payerTokenBefore }} → #{{ tx.payerTokenAfter }}</small>
+                            </td>
+                            <td>
+                                {{ tx.receiverName }}
+                                <br><small style="color: #9ca3af;">#{{ tx.receiverTokenBefore }} → #{{ tx.receiverTokenAfter }}</small>
+                            </td>
+                            <td style="font-weight: 700; color: #f59e0b;">₹{{ tx.totalAmount }}</td>
+                            <td style="color: #10b981; font-weight: 600;">₹{{ tx.platformFee }}</td>
+                            <td style="color: #3b82f6; font-weight: 600;">₹{{ tx.receiverAmount }}</td>
+                            <td style="color: #9ca3af; font-size: 0.85rem;">{{ tx.createdAt | date:'short' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div *ngIf="revenueData.transactions.length === 0" class="empty-state" style="padding: 2rem;">
+                    <div class="empty-icon">💸</div>
+                    <p class="text-secondary">No transactions recorded yet. Revenue will appear here when users complete Fast Service swaps.</p>
+                </div>
+            </div>
+        </ng-container>
+
+        <div *ngIf="!loadingRevenue && !revenueData" class="empty-state" style="padding: 3rem;">
+            <div class="empty-icon">💸</div>
+            <h3>Revenue Data Unavailable</h3>
+            <p class="text-secondary">Could not load revenue data. Please try again.</p>
         </div>
     </section>
 

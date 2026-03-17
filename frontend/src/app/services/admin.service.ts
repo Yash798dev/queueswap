@@ -43,4 +43,8 @@ export class AdminService {
   getDetails(type: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/admin/details/${type}`);
   }
+
+  getRevenue(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/revenue`);
+  }
 }
