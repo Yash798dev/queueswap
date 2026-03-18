@@ -43,6 +43,7 @@ connectDB();
 // Routes
 const authController = require('./controllers/authController');
 const businessController = require('./controllers/businessController');
+const userController = require('./controllers/userController');
 
 app.post('/api/auth/register', authController.register);
 app.post('/api/auth/login', authController.login);
@@ -54,7 +55,12 @@ app.get('/api/admin/analytics', adminController.getAnalytics);
 app.get('/api/admin/details/:type', adminController.getDetailedStats);
 app.get('/api/admin/revenue', adminController.getRevenueAnalytics);
 
+// Consumer Routes
+app.get('/api/user/dashboard/:email', userController.getUserDashboard);
+
 // Business Routes
+app.get('/api/business/explore', businessController.exploreBusinesses);
+app.get('/api/business/trending', businessController.getTrendingBusinesses);
 app.post('/api/business/submit', businessController.submitBusiness);
 app.get('/api/business/pending', businessController.getPendingBusinesses);
 app.get('/api/business/owner/:userId', businessController.getBusinessByOwner);
@@ -62,6 +68,7 @@ app.put('/api/business/:id/status', businessController.updateStatus);
 app.get('/api/business/:id/analytics', businessController.getBusinessAnalytics);
 app.post('/api/business/:id/join', businessController.joinQueue);
 app.get('/api/business/:id/join', businessController.joinQueue);
+app.post('/api/business/:id/queue/remote-join', businessController.remoteJoinQueue);
 app.put('/api/business/queue/update', businessController.updateQueueEntry);
 app.get('/api/business/:businessId/queue', businessController.getQueueEntries);
 

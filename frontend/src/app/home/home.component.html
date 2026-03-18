@@ -1,109 +1,194 @@
 <div class="home-container">
-    <!-- Header -->
+    <!-- Header: User Profile & Wallet -->
     <header class="header">
-        <div class="header-content">
-            <div class="logo">
-                <span class="logo-icon">🚀</span>
-                <span class="logo-text text-gradient">Queue Swap</span>
-            </div>
-            <div class="header-actions">
-                <button *ngIf="isOwner()" (click)="goToQueueManagement()" class="btn-queue">
-                    <span class="btn-icon">🎫</span>
-                    Manage Queue
-                </button>
-                <button (click)="logout()" class="btn-logout">
-                    <span class="btn-icon">🚪</span>
-                    Logout
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Welcome Section -->
-    <section class="welcome-section">
-        <div class="welcome-card">
+        <div class="header-profile">
             <div class="avatar">
                 <span>{{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
             </div>
-            <h1>Welcome back, <span class="text-gradient">{{ user?.name || 'User' }}</span>!</h1>
-            <p class="text-secondary">Manage your business details and queue swap settings</p>
+            <div class="profile-info">
+                <h3>Welcome back, <span class="text-gradient">{{ user?.name || 'User' }}</span>!</h3>
+                <div class="badge-level">
+                    <span class="level-icon">🏅</span>
+                    {{ dashboard?.badges?.levelName || 'Beginner Queueist' }}
+                </div>
+            </div>
         </div>
-    </section>
+        
+        <div class="header-actions">
+            <div class="wallet-card">
+                <span class="wallet-label">Total Earned</span>
+                <span class="wallet-amount">₹{{ dashboard?.walletBalance || 0 }}</span>
+            </div>
+            <button *ngIf="isOwner()" (click)="goToQueueManagement()" class="btn-queue">
+                <span class="btn-icon">🎫</span>
+                Manage Queue
+            </button>
+            <button (click)="logout()" class="btn-action btn-logout">
+                <span class="btn-icon">🚪</span>
+            </button>
+        </div>
+    </header>
 
-    <!-- Business Form Section -->
-    <section class="form-section">
-        <div class="card">
+    <div *ngIf="loadingDashboard || loadingExplore || loadingTrending" class="loading-state">
+        <div class="loading-spinner large"></div>
+        <p>Loading your dashboard...</p>
+    </div>
+
+    <!-- MAIN CONSUMER DASHBOARD -->
+    <ng-container *ngIf="!loadingDashboard">
+
+        <!-- Section 1: My Active Queues -->
+        <section class="dashboard-section" *ngIf="dashboard?.activeQueues && dashboard?.activeQueues?.length! > 0">
+            <h2 class="section-title">
+                <span class="icon-pulse">🔴</span> My Active Queues
+            </h2>
+            <div class="queues-scroll-container">
+                <div *ngFor="let q of dashboard?.activeQueues" class="active-queue-card proxy-card" (click)="goToQueue(q.businessId._id)">
+                    <div class="card-glass-header">
+                        <div class="biz-info">
+                            <h4>{{ q.businessId.name }}</h4>
+                            <span class="status-pill">{{ q.status | uppercase }}</span>
+                        </div>
+                        <div class="token-display">
+                            <span class="label">Token</span>
+                            <span class="number">#{{ q.tokenNumber }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-stats">
+                            <span>{{ q.peopleAhead }} people ahead</span>
+                            <span>~{{ q.estimatedWaitMins }} mins wait</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" [style.width.%]="math.max(10, 100 - (q.peopleAhead * 5))"></div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-glow-small">View Live Map →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Trending & Lucrative Swaps -->
+        <section class="dashboard-section" *ngIf="trendingList.length > 0">
+            <h2 class="section-title text-gradient-amber">
+                🔥 Trending Bidding Wars
+            </h2>
+            <p class="section-subtitle">Jump into these queues and earn by selling your position!</p>
+            
+            <div class="trending-grid">
+                <div *ngFor="let t of trendingList" class="trending-card">
+                    <div class="t-header">
+                        <div class="t-icon">📈</div>
+                        <div class="t-info">
+                            <h4>{{ t.business.name }}</h4>
+                            <span>{{ t.business.category }} • {{ t.business.location }}</span>
+                        </div>
+                    </div>
+                    <div class="t-stats">
+                        <div class="stat-box alert-amber">
+                            <strong>{{ t.requestCount }}</strong> Active Requests!
+                        </div>
+                    </div>
+                    <button class="btn-outline-amber" (click)="joinRemoteQueue(t.business._id)" [disabled]="joiningBusinessId === t.business._id">
+                        {{ joiningBusinessId === t.business._id ? 'Joining...' : 'Join & Sell Spot' }}
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Explore Remote Queues -->
+        <section class="dashboard-section">
+            <div class="section-header-flex">
+                <h2 class="section-title">🌍 Explore Businesses</h2>
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" [(ngModel)]="searchQuery" placeholder="Search hospitals, restaurants...">
+                </div>
+            </div>
+            
+            <div class="explore-grid">
+                <div *ngFor="let b of filteredExploreList" class="explore-card">
+                    <div class="biz-avatar">
+                        {{ b.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="explore-info">
+                        <h3>{{ b.name }}</h3>
+                        <p class="biz-cat">{{ b.category }} • {{ b.location }}</p>
+                        
+                        <div class="live-stats">
+                            <span class="live-pill" [ngClass]="b.waitingCount > 10 ? 'high' : 'normal'">
+                                🟢 {{ b.waitingCount }} Waiting
+                            </span>
+                            <span class="time-pill">
+                                🕒 ~{{ b.estimatedWaitMins }} mins
+                            </span>
+                        </div>
+                    </div>
+                    <div class="explore-action">
+                        <button class="btn-join-remote" (click)="joinRemoteQueue(b._id)" [disabled]="joiningBusinessId === b._id">
+                            {{ joiningBusinessId === b._id ? 'Joining...' : 'Join Remote Queue' }}
+                        </button>
+                    </div>
+                </div>
+                
+                <div *ngIf="filteredExploreList.length === 0" class="empty-state">
+                    <p>No businesses found matching your search.</p>
+                </div>
+            </div>
+        </section>
+
+    </ng-container>
+
+    <div class="divider"></div>
+
+    <!-- Partner Section (Hidden by default) -->
+    <section class="partner-section">
+        <button class="btn-text" (click)="togglePartnerForm()">
+            {{ showPartnerForm ? 'Hide Business Registration' : 'Become a Queue Swap Partner 🏢' }}
+        </button>
+        
+        <div class="form-card" *ngIf="showPartnerForm">
             <div class="card-header">
-                <h2>
-                    <span class="header-icon">🏢</span>
-                    Submit Business Details
-                </h2>
-                <p class="text-secondary">Register your business for queue management</p>
+                <h2>Register Your Business</h2>
+                <p class="text-secondary">Start managing your queues digitally</p>
             </div>
 
             <div *ngIf="submissionStatus === 'success'" class="alert alert-success">
-                <span class="alert-icon">✅</span>
-                Business details submitted successfully! Pending Admin Approval.
+                ✅ Business submitted! Pending Admin Approval.
             </div>
-
             <div *ngIf="submissionStatus === 'error'" class="alert alert-error">
-                <span class="alert-icon">❌</span>
-                Failed to submit details. Please try again.
+                ❌ Failed to submit details. Try again.
             </div>
 
-            <form (ngSubmit)="onSubmit()" #businessForm="ngForm">
+            <form (ngSubmit)="submitPartnerForm()" #businessForm="ngForm">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="name">
-                            <span class="label-icon">📝</span>
-                            Business Name
-                        </label>
-                        <input type="text" id="name" name="name" [(ngModel)]="business.name" required
-                            placeholder="Enter business name">
+                        <label>Business Name</label>
+                        <input type="text" name="name" [(ngModel)]="business.name" required>
                     </div>
-
                     <div class="form-group">
-                        <label for="category">
-                            <span class="label-icon">📂</span>
-                            Category
-                        </label>
-                        <select id="category" name="category" [(ngModel)]="business.category" required>
-                            <option value="Restaurant">🍽️ Restaurant</option>
-                            <option value="Hospital">🏥 Hospital</option>
-                            <option value="Salon">💇 Salon</option>
-                            <option value="Bank">🏦 Bank</option>
-                            <option value="Other">📦 Other</option>
+                        <label>Category</label>
+                        <select name="category" [(ngModel)]="business.category" required>
+                            <option value="Restaurant">Restaurant</option>
+                            <option value="Hospital">Hospital</option>
+                            <option value="Salon">Salon</option>
+                            <option value="Bank">Bank</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
-
                     <div class="form-group">
-                        <label for="location">
-                            <span class="label-icon">📍</span>
-                            Location
-                        </label>
-                        <input type="text" id="location" name="location" [(ngModel)]="business.location" required
-                            placeholder="Enter business location">
+                        <label>Location</label>
+                        <input type="text" name="location" [(ngModel)]="business.location" required>
                     </div>
-
                     <div class="form-group">
-                        <label for="mobile">
-                            <span class="label-icon">📱</span>
-                            Mobile Number
-                        </label>
-                        <input type="tel" id="mobile" name="mobile" [(ngModel)]="business.mobile" required
-                            placeholder="Enter mobile number">
+                        <label>Mobile</label>
+                        <input type="tel" name="mobile" [(ngModel)]="business.mobile" required>
                     </div>
                 </div>
-
-                <button type="submit" [disabled]="!businessForm.form.valid || loading" class="submit-btn">
-                    <span *ngIf="!loading">
-                        <span class="btn-icon">📤</span>
-                        Submit for Approval
-                    </span>
-                    <span *ngIf="loading" class="btn-loading">
-                        <span class="loading-spinner"></span>
-                        Submitting...
-                    </span>
+                <button type="submit" [disabled]="!businessForm.form.valid || loadingBusinessSubmit" class="btn-glow-small mt-3 w-100">
+                    {{ loadingBusinessSubmit ? 'Submitting...' : 'Submit Business for Approval' }}
                 </button>
             </form>
         </div>

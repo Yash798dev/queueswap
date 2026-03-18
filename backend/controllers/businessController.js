@@ -865,3 +865,104 @@ exports.acceptFastServiceOffer = async (req, res) => {
     }
 };
 
+// ==================== CONSUMER HUB ENDPOINTS ====================
+
+exports.exploreBusinesses = async (req, res) => {
+    try {
+        const businesses = await Business.find({ status: 'Approved' });
+        
+        const exploreData = await Promise.all(businesses.map(async (business) => {
+            const waitingCount = await QueueEntry.countDocuments({
+                businessId: business._id,
+                status: 'waiting'
+            });
+            
+            return {
+                ...business.toObject(),
+                waitingCount,
+                estimatedWaitMins: waitingCount * 5
+            };
+        }));
+        
+        res.json(exploreData);
+    } catch (error) {
+        console.error('[ERROR] Explore businesses:', error);
+        res.status(500).json({ message: 'Error exploring businesses', error: error.message });
+    }
+};
+
+exports.getTrendingBusinesses = async (req, res) => {
+    try {
+        const openRequests = await FastServiceRequest.find({ status: 'Open' }).populate('businessId', 'name category location');
+        const trendingMap = new Map();
+        
+        openRequests.forEach(req => {
+            if (req.businessId) {
+                const bId = req.businessId._id.toString();
+                if (!trendingMap.has(bId)) {
+                    trendingMap.set(bId, {
+                        business: req.businessId,
+                        requestCount: 0
+                    });
+                }
+                trendingMap.get(bId).requestCount += 1;
+            }
+        });
+        
+        const trendingList = Array.from(trendingMap.values()).sort((a, b) => b.requestCount - a.requestCount);
+        res.json(trendingList);
+    } catch (error) {
+        console.error('[ERROR] Trending businesses:', error);
+        res.status(500).json({ message: 'Error fetching trending businesses', error: error.message });
+    }
+};
+
+exports.remoteJoinQueue = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, email, mobile } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required for remote join' });
+        }
+
+        const uniqueId = email; 
+
+        const existingEntry = await QueueEntry.findOne({ businessId: id, uniqueId, status: 'waiting' });
+        if (existingEntry) {
+            return res.status(400).json({ message: `You are already in this queue at token #${existingEntry.tokenNumber}` });
+        }
+
+        const business = await Business.findById(id);
+        if (!business) {
+            return res.status(404).json({ message: 'Business not found' });
+        }
+
+        const currentYear = new Date().getFullYear();
+        const startOfYear = new Date(currentYear, 0, 1);
+        const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59);
+
+        const lastEntry = await QueueEntry.findOne({
+            businessId: id,
+            joinedAt: { $gte: startOfYear, $lte: endOfYear }
+        }).sort({ tokenNumber: -1 });
+
+        const nextToken = lastEntry ? lastEntry.tokenNumber + 1 : 1;
+
+        const newEntry = new QueueEntry({
+            businessId: id,
+            uniqueId,
+            userName: name || email.split('@')[0],
+            userPhone: mobile || '',
+            userEmail: email,
+            tokenNumber: nextToken,
+            status: 'waiting'
+        });
+
+        await newEntry.save();
+        res.status(201).json({ message: 'Joined remote queue successfully', token: nextToken, uniqueId });
+    } catch (error) {
+        console.error('[ERROR] Remote join queue:', error);
+        res.status(500).json({ message: 'Error remote joining queue', error: error.message });
+    }
+};
