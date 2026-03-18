@@ -158,13 +158,14 @@ export class RegisterComponent {
         this.authService.register(this.user).subscribe({
             next: (res) => {
                 this.loading = false;
-                this.success = res.message || 'Email sent to your mail, please activate your account.';
+                this.success = res.message || 'Registration successful! Email sent to your mail, please activate your account.';
                 this.user = { name: '', email: '', password: '' };
                 
-                // Auto-redirect to login after 3.5 seconds
-                setTimeout(() => {
-                    this.router.navigate(['/login']);
-                }, 3500);
+                // Show alert box and wait for confirmation
+                alert('Registration successful! Please activate your account using the link sent to your email.');
+                
+                // Redirect to login page after confirmation
+                this.router.navigate(['/login']);
             },
             error: (err) => {
                 this.loading = false;
