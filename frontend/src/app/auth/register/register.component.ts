@@ -145,7 +145,10 @@ export class RegisterComponent {
     error = '';
     success = '';
 
-    constructor(private authService: AuthService) { }
+    constructor(
+        private authService: AuthService,
+        private router: Router
+    ) { }
 
     onSubmit() {
         this.loading = true;
@@ -155,12 +158,17 @@ export class RegisterComponent {
         this.authService.register(this.user).subscribe({
             next: (res) => {
                 this.loading = false;
-                this.success = res.message;
+                this.success = res.message || 'Email sent to your mail, please activate your account.';
                 this.user = { name: '', email: '', password: '' };
+                
+                // Auto-redirect to login after 3.5 seconds
+                setTimeout(() => {
+                    this.router.navigate(['/login']);
+                }, 3500);
             },
             error: (err) => {
                 this.loading = false;
-                this.error = err.error?.message || 'Registration failed';
+                this.error = err.error?.message || err.message || 'Registration failed due to a server error. Please try again.';
             }
         });
     }
