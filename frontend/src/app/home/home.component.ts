@@ -113,28 +113,8 @@ export class HomeComponent implements OnInit {
 
     joinRemoteQueue(businessId: string) {
         if (!this.user || !this.user.email) return;
-        
-        this.joiningBusinessId = businessId;
-        this.joinError = '';
-
-        const payload = {
-            name: this.user.name,
-            email: this.user.email,
-            mobile: '' // User might not have mobile saved, could prompt later
-        };
-
-        this.consumerService.remoteJoinQueue(businessId, payload).subscribe({
-            next: (res) => {
-                this.joiningBusinessId = null;
-                // Add to active queues locally or reload
-                this.loadDashboardData();
-            },
-            error: (err) => {
-                this.joiningBusinessId = null;
-                this.joinError = err.error?.message || 'Failed to join queue remotely';
-                alert(this.joinError);
-            }
-        });
+        // Redirect user to the join page so they can enter name/mobile and optionally connect Metamask
+        this.router.navigate(['/queue-join', businessId]);
     }
 
     goToQueue(businessId: string) {
